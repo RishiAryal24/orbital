@@ -1,6 +1,7 @@
 import json
 from django.db import connection
 from django.http import JsonResponse
+from django.shortcuts import render
 from django.views import View
 from django.views.decorators.csrf import csrf_exempt
 from django.utils.decorators import method_decorator
@@ -35,11 +36,23 @@ class HealthCheckView(View):
 
 class HomeView(View):
     """
-    GET /
-    API root — directory of PyLoom Technologies endpoints.
+    GET / and GET /dashboard/
+    Renders the modern PyLoom Technologies Cloud Console for browser requests,
+    or returns the JSON API directory for programmatic API callers.
     """
 
     def get(self, request):
+        accept = request.headers.get("Accept", "")
+        # Render visual dashboard for browser requests or explicit /dashboard/ path
+        if "text/html" in accept or request.path.rstrip("/").endswith("dashboard"):
+            context = {
+                "services": ProjectService.objects.select_related("client").all(),
+                "total_services": ProjectService.objects.count(),
+                "healthy_services": ProjectService.objects.filter(status="healthy").count(),
+                "total_clients": ClientAccount.objects.count(),
+            }
+            return render(request, "dashboard.html", context)
+
         return JsonResponse(
             {
                 "message": "PyLoom Technologies Cloud Platform API",
@@ -47,6 +60,7 @@ class HomeView(View):
                 "version": "1.0.0",
                 "endpoints": {
                     "health": "/health/",
+                    "dashboard": "/dashboard/",
                     "status": "/api/status/",
                     "clients": "/api/clients/",
                     "services": "/api/services/",

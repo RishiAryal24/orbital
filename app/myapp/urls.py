@@ -18,6 +18,7 @@ urlpatterns = [
     path("admin/", admin.site.urls),
     path("health/", HealthCheckView.as_view(), name="health-check"),
     path("", HomeView.as_view(), name="home"),
+    path("dashboard/", HomeView.as_view(), name="dashboard"),
     # PyLoom Core Platform APIs
     path("api/status/", PlatformStatusView.as_view(), name="platform-status"),
     path("api/clients/", ClientAccountListView.as_view(), name="client-list"),

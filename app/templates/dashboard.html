@@ -1,0 +1,685 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PyLoom Technologies — Cloud Platform Console</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #090d16;
+      --card-bg: rgba(18, 24, 38, 0.7);
+      --card-border: rgba(255, 255, 255, 0.08);
+      --primary: #3b82f6;
+      --primary-hover: #2563eb;
+      --accent: #06b6d4;
+      --success: #10b981;
+      --warning: #f59e0b;
+      --danger: #ef4444;
+      --text-main: #f8fafc;
+      --text-muted: #94a3b8;
+      --font-sans: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+      --font-mono: 'JetBrains Mono', monospace;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background-color: var(--bg);
+      background-image: 
+        radial-gradient(circle at 15% 15%, rgba(59, 130, 246, 0.12) 0%, transparent 40%),
+        radial-gradient(circle at 85% 20%, rgba(6, 182, 212, 0.1) 0%, transparent 40%);
+      color: var(--text-main);
+      font-family: var(--font-sans);
+      min-height: 100vh;
+      line-height: 1.5;
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 0 1.5rem;
+    }
+
+    /* Navbar */
+    header {
+      border-bottom: 1px solid var(--card-border);
+      backdrop-filter: blur(16px);
+      background: rgba(9, 13, 22, 0.75);
+      position: sticky;
+      top: 0;
+      z-index: 50;
+    }
+    .nav-inner {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      height: 72px;
+    }
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      text-decoration: none;
+      color: var(--text-main);
+    }
+    .brand-logo {
+      width: 36px;
+      height: 36px;
+      background: linear-gradient(135deg, #3b82f6, #06b6d4);
+      border-radius: 10px;
+      display: grid;
+      place-items: center;
+      box-shadow: 0 0 20px rgba(59, 130, 246, 0.4);
+    }
+    .brand-logo svg { width: 22px; height: 22px; fill: white; }
+    .brand-title {
+      font-weight: 800;
+      font-size: 1.25rem;
+      letter-spacing: -0.02em;
+    }
+    .brand-tag {
+      font-size: 0.75rem;
+      background: rgba(59, 130, 246, 0.2);
+      color: #60a5fa;
+      padding: 0.15rem 0.5rem;
+      border-radius: 9999px;
+      margin-left: 0.5rem;
+      border: 1px solid rgba(59, 130, 246, 0.3);
+    }
+
+    .nav-links {
+      display: flex;
+      align-items: center;
+      gap: 1.5rem;
+    }
+    .nav-link {
+      color: var(--text-muted);
+      text-decoration: none;
+      font-size: 0.9rem;
+      font-weight: 500;
+      transition: color 0.2s;
+    }
+    .nav-link:hover { color: var(--text-main); }
+    .btn-cta {
+      background: linear-gradient(135deg, var(--primary), var(--accent));
+      color: white;
+      text-decoration: none;
+      padding: 0.6rem 1.25rem;
+      border-radius: 8px;
+      font-weight: 600;
+      font-size: 0.875rem;
+      transition: opacity 0.2s, transform 0.2s;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      border: none;
+      cursor: pointer;
+    }
+    .btn-cta:hover {
+      opacity: 0.95;
+      transform: translateY(-1px);
+    }
+
+    /* Hero Section */
+    .hero {
+      padding: 3.5rem 0 2.5rem;
+      display: flex;
+      flex-direction: column;
+      gap: 1.25rem;
+    }
+    .hero-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.35rem 0.85rem;
+      border-radius: 9999px;
+      background: rgba(16, 185, 129, 0.1);
+      border: 1px solid rgba(16, 185, 129, 0.2);
+      color: #34d399;
+      font-size: 0.8rem;
+      font-weight: 600;
+      width: fit-content;
+    }
+    .pulse-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--success);
+      box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7);
+      animation: pulse 2s infinite;
+    }
+    @keyframes pulse {
+      0% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7); }
+      70% { box-shadow: 0 0 0 8px rgba(16, 185, 129, 0); }
+      100% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
+    }
+    .hero h1 {
+      font-size: 2.75rem;
+      font-weight: 800;
+      letter-spacing: -0.03em;
+      line-height: 1.15;
+      max-width: 800px;
+    }
+    .hero h1 span {
+      background: linear-gradient(135deg, #60a5fa, #22d3ee);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    .hero p {
+      color: var(--text-muted);
+      font-size: 1.1rem;
+      max-width: 680px;
+    }
+
+    /* Stats Grid */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 1.25rem;
+      margin-bottom: 3rem;
+    }
+    .stat-card {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 14px;
+      padding: 1.5rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+      backdrop-filter: blur(8px);
+      transition: transform 0.2s, border-color 0.2s;
+    }
+    .stat-card:hover {
+      transform: translateY(-2px);
+      border-color: rgba(255, 255, 255, 0.15);
+    }
+    .stat-label {
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+    .stat-value {
+      font-size: 2rem;
+      font-weight: 800;
+      color: var(--text-main);
+      font-family: var(--font-mono);
+    }
+    .stat-sub {
+      font-size: 0.8rem;
+      color: #38bdf8;
+    }
+
+    /* Section Headers */
+    .section-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-end;
+      margin-bottom: 1.5rem;
+    }
+    .section-title h2 {
+      font-size: 1.5rem;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+    }
+    .section-title p {
+      color: var(--text-muted);
+      font-size: 0.9rem;
+    }
+
+    /* Filter Tabs */
+    .filter-tabs {
+      display: flex;
+      gap: 0.5rem;
+      background: rgba(255, 255, 255, 0.04);
+      padding: 0.3rem;
+      border-radius: 8px;
+      border: 1px solid var(--card-border);
+    }
+    .filter-btn {
+      background: none;
+      border: none;
+      color: var(--text-muted);
+      padding: 0.4rem 0.9rem;
+      font-size: 0.85rem;
+      font-weight: 600;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .filter-btn.active, .filter-btn:hover {
+      background: rgba(255, 255, 255, 0.1);
+      color: var(--text-main);
+    }
+
+    /* Services Grid */
+    .services-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
+      gap: 1.25rem;
+      margin-bottom: 3.5rem;
+    }
+    .service-card {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 14px;
+      padding: 1.5rem;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      gap: 1.25rem;
+      backdrop-filter: blur(8px);
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+    .service-card:hover {
+      border-color: rgba(59, 130, 246, 0.4);
+      box-shadow: 0 8px 30px rgba(0, 0, 0, 0.3);
+    }
+    .service-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 0.75rem;
+    }
+    .service-name {
+      font-size: 1.1rem;
+      font-weight: 700;
+      color: var(--text-main);
+    }
+    .client-tag {
+      font-size: 0.8rem;
+      color: var(--accent);
+      font-weight: 600;
+      display: block;
+      margin-top: 0.2rem;
+    }
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+      padding: 0.25rem 0.65rem;
+      border-radius: 9999px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      text-transform: capitalize;
+    }
+    .badge-healthy {
+      background: rgba(16, 185, 129, 0.15);
+      color: #34d399;
+      border: 1px solid rgba(16, 185, 129, 0.3);
+    }
+    .badge-deploying {
+      background: rgba(245, 158, 11, 0.15);
+      color: #fbbf24;
+      border: 1px solid rgba(245, 158, 11, 0.3);
+    }
+    .badge-degraded {
+      background: rgba(239, 68, 68, 0.15);
+      color: #f87171;
+      border: 1px solid rgba(239, 68, 68, 0.3);
+    }
+
+    .service-details {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 0.75rem;
+      padding-top: 0.75rem;
+      border-top: 1px solid rgba(255, 255, 255, 0.05);
+      font-size: 0.825rem;
+    }
+    .detail-item {
+      display: flex;
+      flex-direction: column;
+      gap: 0.2rem;
+    }
+    .detail-label { color: var(--text-muted); font-size: 0.75rem; }
+    .detail-val { font-family: var(--font-mono); color: #cbd5e1; font-weight: 500; }
+
+    /* Inquiry & Consultation Form */
+    .inquiry-wrapper {
+      background: linear-gradient(135deg, rgba(30, 41, 59, 0.7), rgba(15, 23, 42, 0.8));
+      border: 1px solid rgba(59, 130, 246, 0.25);
+      border-radius: 16px;
+      padding: 2.5rem;
+      margin-bottom: 4rem;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 3rem;
+      align-items: center;
+      backdrop-filter: blur(12px);
+    }
+    .inquiry-info h3 {
+      font-size: 1.75rem;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      margin-bottom: 0.75rem;
+    }
+    .inquiry-info p {
+      color: var(--text-muted);
+      margin-bottom: 1.5rem;
+      font-size: 0.95rem;
+    }
+    .benefit-list {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+    }
+    .benefit-item {
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      font-size: 0.9rem;
+      color: #e2e8f0;
+    }
+    .benefit-item svg { width: 18px; height: 18px; fill: #38bdf8; flex-shrink: 0; }
+
+    .inquiry-form {
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 0.4rem;
+    }
+    .form-group label {
+      font-size: 0.825rem;
+      font-weight: 600;
+      color: #cbd5e1;
+    }
+    .form-control {
+      background: rgba(15, 23, 42, 0.8);
+      border: 1px solid var(--card-border);
+      border-radius: 8px;
+      padding: 0.65rem 0.85rem;
+      color: var(--text-main);
+      font-family: inherit;
+      font-size: 0.9rem;
+      transition: border-color 0.2s;
+    }
+    .form-control:focus {
+      outline: none;
+      border-color: var(--primary);
+    }
+    textarea.form-control {
+      resize: vertical;
+      min-height: 80px;
+    }
+
+    /* Footer */
+    footer {
+      border-top: 1px solid var(--card-border);
+      padding: 2.5rem 0;
+      text-align: center;
+      color: var(--text-muted);
+      font-size: 0.85rem;
+    }
+    .footer-links {
+      display: flex;
+      justify-content: center;
+      gap: 1.5rem;
+      margin-bottom: 1rem;
+    }
+    .footer-link {
+      color: var(--text-muted);
+      text-decoration: none;
+      transition: color 0.2s;
+    }
+    .footer-link:hover { color: var(--text-main); }
+
+    /* Alert / Message */
+    .alert-success {
+      display: none;
+      background: rgba(16, 185, 129, 0.15);
+      border: 1px solid rgba(16, 185, 129, 0.3);
+      color: #34d399;
+      padding: 0.85rem 1rem;
+      border-radius: 8px;
+      font-size: 0.875rem;
+      font-weight: 500;
+      margin-bottom: 1rem;
+    }
+
+    @media (max-width: 868px) {
+      .inquiry-wrapper { grid-template-columns: 1fr; gap: 2rem; padding: 1.75rem; }
+      .hero h1 { font-size: 2.1rem; }
+      .nav-links { display: none; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Header -->
+  <header>
+    <div class="container nav-inner">
+      <a href="/" class="brand">
+        <div class="brand-logo">
+          <svg viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+        </div>
+        <div class="brand-title">PyLoom Technologies</div>
+        <span class="brand-tag">v1.0.0</span>
+      </a>
+      <nav class="nav-links">
+        <a href="#services" class="nav-link">Cloud Services</a>
+        <a href="#clients" class="nav-link">Client Accounts</a>
+        <a href="/api/status/" class="nav-link">Platform Status</a>
+        <a href="/health/" class="nav-link">Health Check</a>
+        <a href="#inquiry" class="btn-cta">Request Deployment</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="container">
+    <!-- Hero -->
+    <section class="hero">
+      <div class="hero-badge">
+        <div class="pulse-dot"></div>
+        <span>Production GitOps Platform — Operational</span>
+      </div>
+      <h1>Enterprise Cloud Services at <span>$0 Running Cost</span></h1>
+      <p>
+        Zero-downtime Blue-Green deployments, Linkerd mTLS service mesh, distributed OpenTelemetry tracing, and automated DevSecOps on lightweight CNCF Kubernetes.
+      </p>
+    </section>
+
+    <!-- Top Statistics Cards -->
+    <section class="stats-grid">
+      <div class="stat-card">
+        <span class="stat-label">Active Services</span>
+        <span class="stat-value">{{ healthy_services }} / {{ total_services }}</span>
+        <span class="stat-sub">Healthy & verified</span>
+      </div>
+      <div class="stat-card">
+        <span class="stat-label">Managed Clients</span>
+        <span class="stat-value">{{ total_clients }}</span>
+        <span class="stat-sub">Enterprise & Pro tiers</span>
+      </div>
+      <div class="stat-card">
+        <span class="stat-label">Infrastructure Spend</span>
+        <span class="stat-value">$0.00</span>
+        <span class="stat-sub">OCI Always-Free + Cloudflare</span>
+      </div>
+      <div class="stat-card">
+        <span class="stat-label">Deploy Strategy</span>
+        <span class="stat-value">GitOps</span>
+        <span class="stat-sub">Blue-Green via ArgoCD</span>
+      </div>
+    </section>
+
+    <!-- Services Section -->
+    <section id="services">
+      <div class="section-header">
+        <div class="section-title">
+          <h2>Cloud Services & Microservices</h2>
+          <p>Live health and telemetry monitoring across client environments</p>
+        </div>
+        <div class="filter-tabs">
+          <button class="filter-btn active" onclick="filterServices('all')">All</button>
+          <button class="filter-btn" onclick="filterServices('prod')">Production</button>
+          <button class="filter-btn" onclick="filterServices('staging')">Staging</button>
+          <button class="filter-btn" onclick="filterServices('dev')">Development</button>
+        </div>
+      </div>
+
+      <div class="services-grid" id="servicesGrid">
+        {% for service in services %}
+        <div class="service-card" data-env="{{ service.environment }}">
+          <div>
+            <div class="service-top">
+              <div>
+                <h3 class="service-name">{{ service.name }}</h3>
+                <span class="client-tag">{{ service.client.name }}</span>
+              </div>
+              <span class="badge badge-{{ service.status }}">
+                ● {{ service.status }}
+              </span>
+            </div>
+          </div>
+          <div class="service-details">
+            <div class="detail-item">
+              <span class="detail-label">ENVIRONMENT</span>
+              <span class="detail-val">{{ service.environment|upper }}</span>
+            </div>
+            <div class="detail-item">
+              <span class="detail-label">TYPE</span>
+              <span class="detail-val">{{ service.service_type|upper }}</span>
+            </div>
+            <div class="detail-item">
+              <span class="detail-label">VERSION</span>
+              <span class="detail-val">{{ service.version }}</span>
+            </div>
+            <div class="detail-item">
+              <span class="detail-label">ENDPOINT</span>
+              {% if service.endpoint_url %}
+                <a href="{{ service.endpoint_url }}" target="_blank" class="detail-val" style="color:#60a5fa; text-decoration:none;">View URL ↗</a>
+              {% else %}
+                <span class="detail-val" style="color:var(--text-muted)">Cluster Private</span>
+              {% endif %}
+            </div>
+          </div>
+        </div>
+        {% empty %}
+        <div class="service-card">
+          <p style="color: var(--text-muted);">No services registered. Run <code>python manage.py seed_data</code> to populate.</p>
+        </div>
+        {% endfor %}
+      </div>
+    </section>
+
+    <!-- Consultation & Deployment Inquiry Section -->
+    <section id="inquiry" class="inquiry-wrapper">
+      <div class="inquiry-info">
+        <h3>Launch Your Cloud Platform With PyLoom</h3>
+        <p>
+          Need production-grade Kubernetes, automated CI/CD, and zero-downtime architectures tailored for your systems? Request a deployment architecture review.
+        </p>
+        <ul class="benefit-list">
+          <li class="benefit-item">
+            <svg viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>
+            <span>CNCF Kubernetes & GitOps ArgoCD automation</span>
+          </li>
+          <li class="benefit-item">
+            <svg viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>
+            <span>Linkerd mTLS encryption & Prometheus metrics</span>
+          </li>
+          <li class="benefit-item">
+            <svg viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>
+            <span>FinOps cost-reduction & $0-tier optimizations</span>
+          </li>
+        </ul>
+      </div>
+
+      <div>
+        <div id="alertSuccess" class="alert-success">
+          Your deployment inquiry has been submitted! Our platform team will contact you shortly.
+        </div>
+        <form class="inquiry-form" id="inquiryForm" onsubmit="submitInquiry(event)">
+          <div class="form-group">
+            <label for="client_name">Organization / Client Name</label>
+            <input type="text" id="client_name" class="form-control" placeholder="e.g. Acme Cloud Systems" required>
+          </div>
+          <div class="form-group">
+            <label for="contact_email">Work Email</label>
+            <input type="email" id="contact_email" class="form-control" placeholder="devops@acme.com" required>
+          </div>
+          <div class="form-group">
+            <label for="project_name">Project / Service Name</label>
+            <input type="text" id="project_name" class="form-control" placeholder="e.g. Real-Time Telemetry Pipeline" required>
+          </div>
+          <div class="form-group">
+            <label for="requirements">Architecture Requirements</label>
+            <textarea id="requirements" class="form-control" placeholder="Describe your scaling, security, or zero-cost cloud needs..."></textarea>
+          </div>
+          <button type="submit" class="btn-cta" style="justify-content: center; padding: 0.8rem;">
+            Submit Architecture Request →
+          </button>
+        </form>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <div class="container">
+      <div class="footer-links">
+        <a href="/health/" class="footer-link">Health API</a>
+        <a href="/api/status/" class="footer-link">Platform Status API</a>
+        <a href="/api/services/" class="footer-link">Services API</a>
+        <a href="/api/clients/" class="footer-link">Clients API</a>
+        <a href="https://github.com/RishiAryal24/orbital" target="_blank" class="footer-link">GitHub Repository</a>
+      </div>
+      <p>© 2026 PyLoom Technologies. All rights reserved. Cloud-native architecture showcase.</p>
+    </div>
+  </footer>
+
+  <script>
+    function filterServices(env) {
+      document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+      event.target.classList.add('active');
+
+      const cards = document.querySelectorAll('.service-card');
+      cards.forEach(card => {
+        if (env === 'all' || card.getAttribute('data-env') === env) {
+          card.style.display = 'flex';
+        } else {
+          card.style.display = 'none';
+        }
+      });
+    }
+
+    async function submitInquiry(event) {
+      event.preventDefault();
+      const payload = {
+        client_name: document.getElementById('client_name').value.trim(),
+        contact_email: document.getElementById('contact_email').value.trim(),
+        project_name: document.getElementById('project_name').value.trim(),
+        requirements: document.getElementById('requirements').value.trim(),
+      };
+
+      try {
+        const response = await fetch('/api/inquiries/', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload),
+        });
+
+        if (response.ok) {
+          document.getElementById('inquiryForm').reset();
+          const alert = document.getElementById('alertSuccess');
+          alert.style.display = 'block';
+          setTimeout(() => { alert.style.display = 'none'; }, 6000);
+        } else {
+          alert('Submission failed. Please check your fields and try again.');
+        }
+      } catch (err) {
+        console.error(err);
+        alert('Network error submitting inquiry.');
+      }
+    }
+  </script>
+</body>
+</html>

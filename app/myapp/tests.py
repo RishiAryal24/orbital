@@ -37,6 +37,12 @@ class HealthAndStatusTests(TestCase):
         self.assertIn("services", data["endpoints"])
         self.assertIn("inquiries", data["endpoints"])
 
+    def test_dashboard_renders_html_console(self):
+        response = self.client.get("/dashboard/")
+        self.assertEqual(response.status_code, 200)
+        self.assertIn("PyLoom Technologies", response.content.decode())
+        self.assertIn("Cloud Platform Console", response.content.decode())
+
     def test_platform_status_aggregates_metrics(self):
         client = ClientAccount.objects.create(
             name="Test Client", slug="test-client", contact_email="test@client.com"
