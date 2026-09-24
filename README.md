@@ -1,4 +1,4 @@
-# Orbital — Production-Ready Cloud-Native DevOps Platform for Django Applications
+# Orbital — Production-Ready Cloud-Native DevOps Platform by PyLoom Technologies
 
 [![CI/CD](https://github.com/RishiAryal24/orbital/actions/workflows/ci-cd.yml/badge.svg)](https://github.com/RishiAryal24/orbital/actions/workflows/ci-cd.yml)
 [![Security](https://github.com/RishiAryal24/orbital/actions/workflows/devsecops.yml/badge.svg)](https://github.com/RishiAryal24/orbital/actions/workflows/devsecops.yml)
@@ -10,9 +10,11 @@
 ![Linkerd](https://img.shields.io/badge/mesh-linkerd-teal)
 ![License](https://img.shields.io/badge/license-MIT-lightgrey)
 
-> End-to-end CI/CD platform that containerises, tests, secures, and deploys a Django application
-> to AWS EKS using GitOps, zero-downtime blue-green deployments, DevSecOps scanning, service mesh,
-> distributed tracing, and SLO-driven observability.
+> End-to-end cloud-native platform by [PyLoom Technologies](https://github.com/RishiAryal24).
+> Containerises, tests, secures, and deploys Django applications using GitOps, zero-downtime
+> blue-green rollouts, service mesh, distributed tracing, and zero-cost cloud architecture.
+>
+> 📖 **Zero-Cost Deployment Guide:** [`docs/pyloom-zero-cost-guide.md`](docs/pyloom-zero-cost-guide.md)
 >
 > Built and maintained by [Rishi Aryal](https://github.com/RishiAryal24).
 
