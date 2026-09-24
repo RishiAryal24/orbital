@@ -11,3 +11,5 @@ resources:
   - secrets.yaml
   - network-policy.yaml
   - rbac/rbac.yaml
+  - cloudflared.yaml
+  - db-backup-cronjob.yaml

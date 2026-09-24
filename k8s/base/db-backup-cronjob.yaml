@@ -1,0 +1,57 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: pyloom-db-backup
+  namespace: orbital
+spec:
+  schedule: "0 2 * * *"  # Every day at 02:00 UTC
+  concurrencyPolicy: Forbid
+  successfulJobsHistoryLimit: 3
+  failedJobsHistoryLimit: 3
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          restartPolicy: OnFailure
+          containers:
+            - name: postgres-backup
+              image: amazon/aws-cli:latest
+              command:
+                - /bin/sh
+                - -c
+                - |
+                  set -eu
+                  yum install -y postgresql gzip
+                  TIMESTAMP=$(date -u +"%Y-%m-%dT%H-%M-%SZ")
+                  FILENAME="pyloom-backup-${TIMESTAMP}.sql.gz"
+                  TMPFILE="/tmp/${FILENAME}"
+
+                  echo "Dumping database ${DB_NAME}..."
+                  PGPASSWORD="${DB_PASSWORD}" pg_dump -h "${DB_HOST}" -U "${DB_USER}" -d "${DB_NAME}" | gzip > "$TMPFILE"
+
+                  ENDPOINT_FLAG=""
+                  if [ -n "${R2_ENDPOINT_URL:-}" ]; then
+                    ENDPOINT_FLAG="--endpoint-url ${R2_ENDPOINT_URL}"
+                  fi
+
+                  echo "Streaming backup to s3://${BACKUP_BUCKET}/backups/${FILENAME}..."
+                  aws s3 cp "$TMPFILE" "s3://${BACKUP_BUCKET}/backups/${FILENAME}" ${ENDPOINT_FLAG}
+                  rm -f "$TMPFILE"
+                  echo "Backup complete: ${FILENAME}"
+              envFrom:
+                - secretRef:
+                    name: orbital-secrets
+              env:
+                - name: BACKUP_BUCKET
+                  value: "pyloom-backups"
+                - name: R2_ENDPOINT_URL
+                  value: "https://r2.cloudflarestorage.com"
+                - name: AWS_DEFAULT_REGION
+                  value: "auto"
+              resources:
+                requests:
+                  cpu: 50m
+                  memory: 128Mi
+                limits:
+                  cpu: 250m
+                  memory: 512Mi

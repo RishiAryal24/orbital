@@ -1,80 +1,79 @@
-name: Database Backup
+name: Database Backup (Cloudflare R2 / S3 Zero-Cost)
 
 # Runs every night at 02:00 UTC.
-# Dumps the Postgres database, compresses it, and uploads to S3.
-# Retains 30 days of backups via an S3 lifecycle rule (set in Terraform).
+# Dumps the Postgres database, compresses it, and streams to Cloudflare R2 (or AWS S3).
+# Cloudflare R2 provides 10 GB free storage with $0 egress fees.
 
 on:
   schedule:
     - cron: "0 2 * * *"   # 02:00 UTC daily
-  workflow_dispatch:        # also triggerable manually from the Actions tab
-
-env:
-  AWS_REGION: us-east-1
+  workflow_dispatch:      # also triggerable manually from the Actions tab
 
 jobs:
   backup:
-    name: "Postgres → S3 backup"
+    name: "Postgres → Cloudflare R2 / S3 Backup"
     runs-on: ubuntu-latest
 
     steps:
-      - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@v4
-        with:
-          aws-access-key-id:     ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region:            ${{ env.AWS_REGION }}
+      - name: Install PostgreSQL Client
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq postgresql-client
 
-      - name: Run pg_dump on EC2 and upload to S3
-        uses: appleboy/ssh-action@v1.0.3
+      - name: Dump, Compress, and Upload to R2 / S3
         env:
-          DB_NAME:     ${{ secrets.DB_NAME }}
-          DB_USER:     ${{ secrets.DB_USER }}
-          DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
-          DB_HOST:     ${{ secrets.DB_HOST }}
-          DB_PORT:     "5432"
-          S3_BUCKET:   ${{ secrets.BACKUP_S3_BUCKET }}
-          AWS_REGION:  ${{ env.AWS_REGION }}
-        with:
-          host:     ${{ secrets.EC2_HOST }}
-          username: ec2-user
-          key:      ${{ secrets.EC2_SSH_PRIVATE_KEY }}
-          envs:     DB_NAME,DB_USER,DB_PASSWORD,DB_HOST,DB_PORT,S3_BUCKET,AWS_REGION
-          script: |
-            set -euo pipefail
+          DB_NAME:          ${{ secrets.DB_NAME }}
+          DB_USER:          ${{ secrets.DB_USER }}
+          DB_PASSWORD:      ${{ secrets.DB_PASSWORD }}
+          DB_HOST:          ${{ secrets.DB_HOST }}
+          DB_PORT:          ${{ secrets.DB_PORT || '5432' }}
+          R2_BUCKET:        ${{ secrets.BACKUP_BUCKET || 'pyloom-backups' }}
+          R2_ENDPOINT_URL:  ${{ secrets.R2_ENDPOINT_URL }}
+          AWS_ACCESS_KEY_ID:     ${{ secrets.R2_ACCESS_KEY_ID || secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY || secrets.AWS_SECRET_ACCESS_KEY }}
+          AWS_DEFAULT_REGION:    auto
+        run: |
+          set -euo pipefail
 
-            TIMESTAMP=$(date -u +"%Y-%m-%dT%H-%M-%SZ")
-            FILENAME="backup-${TIMESTAMP}.sql.gz"
-            TMPFILE="/tmp/${FILENAME}"
+          TIMESTAMP=$(date -u +"%Y-%m-%dT%H-%M-%SZ")
+          FILENAME="pyloom-backup-${TIMESTAMP}.sql.gz"
+          TMPFILE="/tmp/${FILENAME}"
 
-            echo "📦 Dumping database ${DB_NAME}…"
-            PGPASSWORD="$DB_PASSWORD" pg_dump \
-              --host="$DB_HOST" \
-              --port="$DB_PORT" \
-              --username="$DB_USER" \
-              --dbname="$DB_NAME" \
-              --format=plain \
-              --no-password \
-            | gzip > "$TMPFILE"
+          echo "📦 Dumping database ${DB_NAME} from ${DB_HOST}…"
+          PGPASSWORD="$DB_PASSWORD" pg_dump \
+            --host="$DB_HOST" \
+            --port="$DB_PORT" \
+            --username="$DB_USER" \
+            --dbname="$DB_NAME" \
+            --format=plain \
+            --no-password \
+          | gzip > "$TMPFILE"
 
-            SIZE=$(du -sh "$TMPFILE" | cut -f1)
-            echo "  Compressed size: $SIZE"
+          SIZE=$(du -sh "$TMPFILE" | cut -f1)
+          echo "  Compressed backup size: $SIZE"
 
-            echo "☁️  Uploading to s3://${S3_BUCKET}/backups/${FILENAME}…"
-            aws s3 cp "$TMPFILE" "s3://${S3_BUCKET}/backups/${FILENAME}" \
-              --region "$AWS_REGION" \
-              --storage-class STANDARD_IA
+          ENDPOINT_FLAG=""
+          if [ -n "${R2_ENDPOINT_URL:-}" ]; then
+            ENDPOINT_FLAG="--endpoint-url ${R2_ENDPOINT_URL}"
+            echo "☁️  Streaming to Cloudflare R2: s3://${R2_BUCKET}/backups/${FILENAME}…"
+          else
+            echo "☁️  Streaming to S3: s3://${R2_BUCKET}/backups/${FILENAME}…"
+          fi
 
-            rm -f "$TMPFILE"
-            echo "✅ Backup complete: s3://${S3_BUCKET}/backups/${FILENAME} (${SIZE})"
+          aws s3 cp "$TMPFILE" "s3://${R2_BUCKET}/backups/${FILENAME}" ${ENDPOINT_FLAG}
+
+          rm -f "$TMPFILE"
+          echo "✅ Backup complete: ${FILENAME} (${SIZE})"
 
       - name: Log backup to summary
         if: always()
         run: |
           if [ "${{ job.status }}" = "success" ]; then
-            echo "### ✅ Backup succeeded" >> "$GITHUB_STEP_SUMMARY"
-            echo "- Uploaded to: \`s3://${{ secrets.BACKUP_S3_BUCKET }}/backups/\`" >> "$GITHUB_STEP_SUMMARY"
-            echo "- Triggered at: $(date -u)" >> "$GITHUB_STEP_SUMMARY"
+            echo "### ✅ Database Backup Succeeded" >> "$GITHUB_STEP_SUMMARY"
+            echo "- Storage: Cloudflare R2 / S3 (Zero Egress Cost)" >> "$GITHUB_STEP_SUMMARY"
+            echo "- Target Bucket: \`${{ secrets.BACKUP_BUCKET || 'pyloom-backups' }}\`" >> "$GITHUB_STEP_SUMMARY"
+            echo "- Timestamp: \`$(date -u)\`" >> "$GITHUB_STEP_SUMMARY"
           else
-            echo "### ❌ Backup failed — check SSH step logs" >> "$GITHUB_STEP_SUMMARY"
+            echo "### ❌ Database Backup Failed" >> "$GITHUB_STEP_SUMMARY"
+            echo "Check workflow logs for connection or credentials issues." >> "$GITHUB_STEP_SUMMARY"
           fi
