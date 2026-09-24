@@ -23,13 +23,28 @@ INSTALLED_APPS = [
     "django.contrib.messages",
     "django.contrib.staticfiles",
     "myapp",
-    "django_prometheus",
 ]
 
-MIDDLEWARE = [
-    "django_prometheus.middleware.PrometheusBeforeMiddleware",
-    "django.middleware.security.SecurityMiddleware",
-    "whitenoise.middleware.WhiteNoiseMiddleware",   # serve static files in production
+try:
+    import django_prometheus
+    INSTALLED_APPS.append("django_prometheus")
+    PROMETHEUS_AVAILABLE = True
+except ImportError:
+    PROMETHEUS_AVAILABLE = False
+
+MIDDLEWARE = []
+if PROMETHEUS_AVAILABLE:
+    MIDDLEWARE.append("django_prometheus.middleware.PrometheusBeforeMiddleware")
+
+MIDDLEWARE.append("django.middleware.security.SecurityMiddleware")
+
+try:
+    import whitenoise
+    MIDDLEWARE.append("whitenoise.middleware.WhiteNoiseMiddleware")
+except ImportError:
+    pass
+
+MIDDLEWARE.extend([
     "myapp.middleware.RequestLoggingMiddleware",    # structured JSON request logs
     "myapp.middleware.RateLimitMiddleware",         # 60 req/min per IP
     "django.contrib.sessions.middleware.SessionMiddleware",
@@ -38,8 +53,10 @@ MIDDLEWARE = [
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
-    "django_prometheus.middleware.PrometheusAfterMiddleware",
-]
+])
+
+if PROMETHEUS_AVAILABLE:
+    MIDDLEWARE.append("django_prometheus.middleware.PrometheusAfterMiddleware")
 
 ROOT_URLCONF = "myapp.urls"
 
@@ -62,16 +79,24 @@ TEMPLATES = [
 WSGI_APPLICATION = "myapp.wsgi.application"
 
 # ── Database ──────────────────────────────────────────────────
-DATABASES = {
-    "default": {
-        "ENGINE": "django.db.backends.postgresql",
-        "NAME":     os.environ.get("DB_NAME",     "myapp"),
-        "USER":     os.environ.get("DB_USER",     "postgres"),
-        "PASSWORD": os.environ.get("DB_PASSWORD", ""),
-        "HOST":     os.environ.get("DB_HOST",     "localhost"),
-        "PORT":     os.environ.get("DB_PORT",     "5432"),
+if os.environ.get("USE_SQLITE", "false").lower() == "true":
+    DATABASES = {
+        "default": {
+            "ENGINE": "django.db.backends.sqlite3",
+            "NAME": BASE_DIR / "db.sqlite3",
+        }
     }
-}
+else:
+    DATABASES = {
+        "default": {
+            "ENGINE": "django.db.backends.postgresql",
+            "NAME":     os.environ.get("DB_NAME",     "myapp"),
+            "USER":     os.environ.get("DB_USER",     "postgres"),
+            "PASSWORD": os.environ.get("DB_PASSWORD", ""),
+            "HOST":     os.environ.get("DB_HOST",     "localhost"),
+            "PORT":     os.environ.get("DB_PORT",     "5432"),
+        }
+    }
 
 # ── Password validation ───────────────────────────────────────
 AUTH_PASSWORD_VALIDATORS = [

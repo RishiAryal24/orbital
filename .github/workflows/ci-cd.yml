@@ -204,6 +204,6 @@ jobs:
         env:
           APP_URL: ${{ secrets.PRODUCTION_URL }}
         run: |
-          STATUS=$(curl -s -o /dev/null -w "%{http_code}" "$APP_URL/api/articles/")
+          STATUS=$(curl -s -o /dev/null -w "%{http_code}" "$APP_URL/api/services/")
           [ "$STATUS" = "200" ] || (echo "API returned $STATUS" && exit 1)
-          echo "API smoke test passed"
+          echo "PyLoom Services API smoke test passed"
