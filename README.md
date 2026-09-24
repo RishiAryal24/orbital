@@ -1,8 +1,8 @@
 # Orbital — Production-Ready Cloud-Native DevOps Platform for Django Applications
 
-[![CI/CD](https://github.com/aryalrishi29-blip/orbital/actions/workflows/ci-cd.yml/badge.svg)](https://github.com/aryalrishi29-blip/orbital/actions/workflows/ci-cd.yml)
-[![Security](https://github.com/aryalrishi29-blip/orbital/actions/workflows/devsecops.yml/badge.svg)](https://github.com/aryalrishi29-blip/orbital/actions/workflows/devsecops.yml)
-[![Load Test](https://github.com/aryalrishi29-blip/orbital/actions/workflows/load-test.yml/badge.svg)](https://github.com/aryalrishi29-blip/orbital/actions/workflows/load-test.yml)
+[![CI/CD](https://github.com/RishiAryal24/orbital/actions/workflows/ci-cd.yml/badge.svg)](https://github.com/RishiAryal24/orbital/actions/workflows/ci-cd.yml)
+[![Security](https://github.com/RishiAryal24/orbital/actions/workflows/devsecops.yml/badge.svg)](https://github.com/RishiAryal24/orbital/actions/workflows/devsecops.yml)
+[![Load Test](https://github.com/RishiAryal24/orbital/actions/workflows/load-test.yml/badge.svg)](https://github.com/RishiAryal24/orbital/actions/workflows/load-test.yml)
 ![Python](https://img.shields.io/badge/python-3.11-blue)
 ![Django](https://img.shields.io/badge/django-4.2-green)
 ![Kubernetes](https://img.shields.io/badge/kubernetes-1.29-blue)
@@ -14,7 +14,7 @@
 > to AWS EKS using GitOps, zero-downtime blue-green deployments, DevSecOps scanning, service mesh,
 > distributed tracing, and SLO-driven observability.
 >
-> Built and maintained by [Rishi Aryal](https://github.com/aryalrishi29-blip).
+> Built and maintained by [Rishi Aryal](https://github.com/RishiAryal24).
 
 ---
 
