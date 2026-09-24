@@ -19,7 +19,8 @@ class HealthCheckView(View):
         return JsonResponse(
             {
                 "status":  "healthy",
-                "service": "orbital",
+                "service": "pyloom-services",
+                "organization": "PyLoom Technologies",
                 "version": "1.0.0",
             }
         )
@@ -34,7 +35,8 @@ class HomeView(View):
     def get(self, request):
         return JsonResponse(
             {
-                "message": "Orbital Platform API",
+                "message": "PyLoom Technologies Cloud Platform API",
+                "service": "pyloom-services",
                 "endpoints": {
                     "health":   "/health/",
                     "articles": "/api/articles/",

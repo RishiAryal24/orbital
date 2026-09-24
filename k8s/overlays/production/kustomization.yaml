@@ -43,5 +43,5 @@ patches:
 
 images:
   - name: REPLACE_WITH_ECR_IMAGE
-    newName: REPLACE_WITH_ECR_REGISTRY/orbital
+    newName: ghcr.io/pyloomtech/pyloom-service
     newTag:  latest                 # CI updates this to the exact SHA
