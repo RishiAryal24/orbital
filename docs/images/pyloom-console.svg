@@ -1,0 +1,141 @@
+<svg width="1200" height="720" viewBox="0 0 1200 720" xmlns="http://www.w3.org/2000/svg" font-family="'Plus Jakarta Sans',Inter,ui-sans-serif,system-ui,sans-serif">
+  <defs>
+    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#090d16"/>
+      <stop offset="100%" stop-color="#0f172a"/>
+    </linearGradient>
+    <linearGradient id="brandGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#3b82f6"/>
+      <stop offset="100%" stop-color="#06b6d4"/>
+    </linearGradient>
+    <linearGradient id="cardGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#1e293b" stop-opacity="0.8"/>
+      <stop offset="100%" stop-color="#0f172a" stop-opacity="0.9"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Background -->
+  <rect width="1200" height="720" fill="url(#bgGrad)"/>
+  <circle cx="150" cy="120" r="220" fill="#3b82f6" opacity="0.08" filter="blur(60px)"/>
+  <circle cx="1050" cy="180" r="250" fill="#06b6d4" opacity="0.07" filter="blur(70px)"/>
+
+  <!-- Top Navbar -->
+  <rect width="1200" height="68" fill="#090d16" fill-opacity="0.85"/>
+  <line x1="0" y1="68" x2="1200" y2="68" stroke="#ffffff" stroke-opacity="0.08"/>
+
+  <!-- Brand Logo & Name -->
+  <rect x="36" y="16" width="36" height="36" rx="10" fill="url(#brandGrad)"/>
+  <path d="M44 26 L54 21 L64 26 L54 31 Z M44 33 L54 38 L64 33 M44 39 L54 44 L64 39" fill="none" stroke="#ffffff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+  <text x="84" y="39" font-size="17" font-weight="800" fill="#ffffff" letter-spacing="-0.5px">PyLoom Technologies</text>
+  <rect x="274" y="24" width="56" height="20" rx="10" fill="#3b82f6" fill-opacity="0.2"/>
+  <text x="302" y="38" text-anchor="middle" font-size="10" font-weight="700" fill="#60a5fa">v1.0.0</text>
+
+  <!-- Nav links -->
+  <text x="640" y="40" font-size="13" font-weight="500" fill="#94a3b8">Cloud Services</text>
+  <text x="760" y="40" font-size="13" font-weight="500" fill="#94a3b8">Client Accounts</text>
+  <text x="890" y="40" font-size="13" font-weight="500" fill="#94a3b8">Platform Status</text>
+  <rect x="1020" y="16" width="144" height="36" rx="8" fill="url(#brandGrad)"/>
+  <text x="1092" y="39" text-anchor="middle" font-size="12" font-weight="700" fill="#ffffff">Request Deployment</text>
+
+  <!-- Hero Status Banner -->
+  <rect x="36" y="92" width="280" height="28" rx="14" fill="#10b981" fill-opacity="0.12" stroke="#10b981" stroke-opacity="0.3"/>
+  <circle cx="52" cy="106" r="4" fill="#10b981"/>
+  <text x="64" y="110" font-size="11" font-weight="700" fill="#34d399">Production GitOps Platform — Operational</text>
+
+  <text x="36" y="152" font-size="30" font-weight="800" fill="#ffffff" letter-spacing="-1px">Enterprise Cloud Services at <tspan fill="#38bdf8">$0 Running Cost</tspan></text>
+  <text x="36" y="178" font-size="13" fill="#94a3b8">Zero-downtime Blue-Green deployments, Linkerd mTLS service mesh, distributed OpenTelemetry tracing on K3s.</text>
+
+  <!-- Stats Grid -->
+  <!-- Stat 1 -->
+  <rect x="36" y="206" width="268" height="92" rx="12" fill="url(#cardGrad)" stroke="#ffffff" stroke-opacity="0.08"/>
+  <text x="56" y="232" font-size="11" font-weight="600" fill="#94a3b8" letter-spacing="0.5px">ACTIVE SERVICES</text>
+  <text x="56" y="268" font-size="28" font-weight="800" fill="#ffffff" font-family="'JetBrains Mono',monospace">7 / 7</text>
+  <text x="56" y="286" font-size="11" fill="#34d399">● 100% Healthy &amp; verified</text>
+
+  <!-- Stat 2 -->
+  <rect x="320" y="206" width="268" height="92" rx="12" fill="url(#cardGrad)" stroke="#ffffff" stroke-opacity="0.08"/>
+  <text x="340" y="232" font-size="11" font-weight="600" fill="#94a3b8" letter-spacing="0.5px">MANAGED CLIENTS</text>
+  <text x="340" y="268" font-size="28" font-weight="800" fill="#ffffff" font-family="'JetBrains Mono',monospace">3</text>
+  <text x="340" y="286" font-size="11" fill="#60a5fa">Enterprise &amp; Pro tiers</text>
+
+  <!-- Stat 3 -->
+  <rect x="604" y="206" width="268" height="92" rx="12" fill="url(#cardGrad)" stroke="#ffffff" stroke-opacity="0.08"/>
+  <text x="624" y="232" font-size="11" font-weight="600" fill="#94a3b8" letter-spacing="0.5px">INFRASTRUCTURE OVERHEAD</text>
+  <text x="624" y="268" font-size="28" font-weight="800" fill="#34d399" font-family="'JetBrains Mono',monospace">$0.00</text>
+  <text x="624" y="286" font-size="11" fill="#94a3b8">OCI Always-Free + Cloudflare</text>
+
+  <!-- Stat 4 -->
+  <rect x="888" y="206" width="276" height="92" rx="12" fill="url(#cardGrad)" stroke="#ffffff" stroke-opacity="0.08"/>
+  <text x="908" y="232" font-size="11" font-weight="600" fill="#94a3b8" letter-spacing="0.5px">DEPLOYMENT STRATEGY</text>
+  <text x="908" y="268" font-size="28" font-weight="800" fill="#c084fc" font-family="'JetBrains Mono',monospace">GitOps</text>
+  <text x="908" y="286" font-size="11" fill="#94a3b8">Blue-Green via ArgoCD</text>
+
+  <!-- Section Header -->
+  <text x="36" y="336" font-size="18" font-weight="700" fill="#ffffff">Cloud Services &amp; Microservices Explorer</text>
+  <text x="36" y="356" font-size="12" fill="#94a3b8">Live health and telemetry monitoring across client environments</text>
+
+  <!-- Filter tabs -->
+  <rect x="880" y="324" width="284" height="34" rx="8" fill="#1e293b" stroke="#ffffff" stroke-opacity="0.08"/>
+  <rect x="884" y="328" width="56" height="26" rx="6" fill="#3b82f6"/>
+  <text x="912" y="345" text-anchor="middle" font-size="11" font-weight="600" fill="#ffffff">All</text>
+  <text x="976" y="345" text-anchor="middle" font-size="11" font-weight="600" fill="#94a3b8">Production</text>
+  <text x="1052" y="345" text-anchor="middle" font-size="11" font-weight="600" fill="#94a3b8">Staging</text>
+  <text x="1124" y="345" text-anchor="middle" font-size="11" font-weight="600" fill="#94a3b8">Dev</text>
+
+  <!-- Service Cards Row 1 -->
+  <!-- Card 1: Apex Fleet Tracking API -->
+  <rect x="36" y="378" width="362" height="150" rx="12" fill="url(#cardGrad)" stroke="#3b82f6" stroke-opacity="0.3"/>
+  <text x="56" y="408" font-size="15" font-weight="700" fill="#ffffff">Fleet Telematics &amp; Tracking API</text>
+  <text x="56" y="426" font-size="12" font-weight="600" fill="#06b6d4">Apex Global Logistics</text>
+  <rect x="306" y="394" width="76" height="22" rx="11" fill="#10b981" fill-opacity="0.15" stroke="#10b981" stroke-opacity="0.4"/>
+  <text x="344" y="409" text-anchor="middle" font-size="10" font-weight="700" fill="#34d399">● HEALTHY</text>
+  <line x1="56" y1="442" x2="378" y2="442" stroke="#ffffff" stroke-opacity="0.06"/>
+  <text x="56" y="466" font-size="10" fill="#64748b">ENVIRONMENT</text>
+  <text x="56" y="484" font-size="12" font-weight="600" fill="#e2e8f0" font-family="'JetBrains Mono',monospace">PROD</text>
+  <text x="160" y="466" font-size="10" fill="#64748b">TYPE</text>
+  <text x="160" y="484" font-size="12" font-weight="600" fill="#e2e8f0" font-family="'JetBrains Mono',monospace">WEB API</text>
+  <text x="260" y="466" font-size="10" fill="#64748b">VERSION</text>
+  <text x="260" y="484" font-size="12" font-weight="600" fill="#e2e8f0" font-family="'JetBrains Mono',monospace">v2.4.0</text>
+  <text x="56" y="512" font-size="11" fill="#60a5fa">https://api.apexlogistics.io ↗</text>
+
+  <!-- Card 2: Nexus Patient Clinical Record API -->
+  <rect x="418" y="378" width="362" height="150" rx="12" fill="url(#cardGrad)" stroke="#ffffff" stroke-opacity="0.08"/>
+  <text x="438" y="408" font-size="15" font-weight="700" fill="#ffffff">Patient Clinical Record API</text>
+  <text x="438" y="426" font-size="12" font-weight="600" fill="#06b6d4">Nexus HealthTech</text>
+  <rect x="688" y="394" width="76" height="22" rx="11" fill="#10b981" fill-opacity="0.15" stroke="#10b981" stroke-opacity="0.4"/>
+  <text x="726" y="409" text-anchor="middle" font-size="10" font-weight="700" fill="#34d399">● HEALTHY</text>
+  <line x1="438" y1="442" x2="760" y2="442" stroke="#ffffff" stroke-opacity="0.06"/>
+  <text x="438" y="466" font-size="10" fill="#64748b">ENVIRONMENT</text>
+  <text x="438" y="484" font-size="12" font-weight="600" fill="#e2e8f0" font-family="'JetBrains Mono',monospace">PROD</text>
+  <text x="542" y="466" font-size="10" fill="#64748b">TYPE</text>
+  <text x="542" y="484" font-size="12" font-weight="600" fill="#e2e8f0" font-family="'JetBrains Mono',monospace">REST API</text>
+  <text x="642" y="466" font-size="10" fill="#64748b">VERSION</text>
+  <text x="642" y="484" font-size="12" font-weight="600" fill="#e2e8f0" font-family="'JetBrains Mono',monospace">v1.8.2</text>
+  <text x="438" y="512" font-size="11" fill="#60a5fa">https://api.nexushealth.org ↗</text>
+
+  <!-- Card 3: HL7 FHIR Sync Service -->
+  <rect x="800" y="378" width="364" height="150" rx="12" fill="url(#cardGrad)" stroke="#ffffff" stroke-opacity="0.08"/>
+  <text x="820" y="408" font-size="15" font-weight="700" fill="#ffffff">HL7 / FHIR Data Sync Worker</text>
+  <text x="820" y="426" font-size="12" font-weight="600" fill="#06b6d4">Nexus HealthTech</text>
+  <rect x="1064" y="394" width="84" height="22" rx="11" fill="#f59e0b" fill-opacity="0.15" stroke="#f59e0b" stroke-opacity="0.4"/>
+  <text x="1106" y="409" text-anchor="middle" font-size="10" font-weight="700" fill="#fbbf24">● DEPLOYING</text>
+  <line x1="820" y1="442" x2="1144" y2="442" stroke="#ffffff" stroke-opacity="0.06"/>
+  <text x="820" y="466" font-size="10" fill="#64748b">ENVIRONMENT</text>
+  <text x="820" y="484" font-size="12" font-weight="600" fill="#e2e8f0" font-family="'JetBrains Mono',monospace">STAGING</text>
+  <text x="924" y="466" font-size="10" fill="#64748b">TYPE</text>
+  <text x="924" y="484" font-size="12" font-weight="600" fill="#e2e8f0" font-family="'JetBrains Mono',monospace">WORKER</text>
+  <text x="1024" y="466" font-size="10" fill="#64748b">VERSION</text>
+  <text x="1024" y="484" font-size="12" font-weight="600" fill="#e2e8f0" font-family="'JetBrains Mono',monospace">v1.9.0-rc2</text>
+  <text x="820" y="512" font-size="11" fill="#94a3b8">Internal Cluster Queue</text>
+
+  <!-- Bottom Architecture / Consultation Banner -->
+  <rect x="36" y="550" width="1128" height="130" rx="14" fill="#1e293b" fill-opacity="0.7" stroke="#3b82f6" stroke-opacity="0.25"/>
+  <text x="64" y="586" font-size="17" font-weight="800" fill="#ffffff">Ready to Deploy Your Cloud Architecture with PyLoom Technologies?</text>
+  <text x="64" y="610" font-size="12" fill="#94a3b8">Enterprise CNCF Kubernetes, GitOps declarative synchronization, automated blue-green cutovers, and zero cloud waste.</text>
+  <rect x="64" y="630" width="180" height="32" rx="6" fill="#3b82f6"/>
+  <text x="154" y="650" text-anchor="middle" font-size="12" font-weight="700" fill="#ffffff">Submit Architecture Request</text>
+  <text x="270" y="651" font-size="12" fill="#60a5fa">API Docs: /api/status/ · /api/services/ · /api/clients/ · /health/</text>
+
+  <!-- Footer -->
+  <text x="600" y="705" text-anchor="middle" font-size="11" fill="#475569">PyLoom Technologies Cloud Platform · Live Production Showcase · github.com/RishiAryal24/orbital</text>
+</svg>

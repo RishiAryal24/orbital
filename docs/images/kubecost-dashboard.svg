@@ -242,5 +242,5 @@
 
   <!-- footer -->
   <rect x="0" y="656" width="1200" height="24" fill="#161b27"/>
-  <text x="220" y="671" font-size="11" fill="#8b949e">Kubecost v1.108.0 · orbital-production cluster · Last updated 14 Mar 2025 14:32 UTC · github.com/aryalrishi29-blip/orbital</text>
+  <text x="220" y="671" font-size="11" fill="#8b949e">Kubecost v1.108.0 · orbital-production cluster · Last updated 14 Mar 2025 14:32 UTC · github.com/RishiAryal24/orbital</text>
 </svg>

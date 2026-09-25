@@ -66,7 +66,7 @@
 
   <!-- Source info -->
   <text x="252" y="152" font-size="11" fill="#8b949e">Repo:</text>
-  <text x="290" y="152" font-size="11" fill="#58a6ff">github.com/aryalrishi29-blip/orbital</text>
+  <text x="290" y="152" font-size="11" fill="#58a6ff">github.com/RishiAryal24/orbital</text>
   <text x="560" y="152" font-size="11" fill="#8b949e">Path:</text>
   <text x="592" y="152" font-size="11" fill="#e6edf3">k8s/overlays/production</text>
   <text x="800" y="152" font-size="11" fill="#8b949e">Target:</text>
@@ -200,7 +200,7 @@
   <text x="892" y="636" font-size="11" fill="#8b949e">14:26:55</text>
   <text x="960" y="636" font-size="11" fill="#58a6ff">Sync started · new image detected</text>
   <text x="892" y="653" font-size="11" fill="#8b949e">14:25:10</text>
-  <text x="960" y="653" font-size="11" fill="#e6edf3">Manifest commit · aryalrishi29-blip</text>
+  <text x="960" y="653" font-size="11" fill="#e6edf3">Manifest commit · RishiAryal24</text>
   <text x="892" y="670" font-size="11" fill="#8b949e">14:24:38</text>
   <text x="960" y="670" font-size="11" fill="#e6edf3">Image pushed to ECR · a3f9c82</text>
 

@@ -12,8 +12,8 @@
   <rect width="900" height="1320" fill="#0f172a" rx="16"/>
 
   <!-- Title -->
-  <text x="450" y="48" text-anchor="middle" font-size="22" font-weight="700" fill="#f1f5f9" font-family="ui-sans-serif,system-ui,sans-serif">Orbital — Cloud-Native Delivery Platform</text>
-  <text x="450" y="72" text-anchor="middle" font-size="13" fill="#64748b" font-family="ui-sans-serif,system-ui,sans-serif">End-to-end architecture for Django applications on AWS EKS</text>
+  <text x="450" y="48" text-anchor="middle" font-size="22" font-weight="700" fill="#f1f5f9" font-family="ui-sans-serif,system-ui,sans-serif">PyLoom Technologies — Cloud-Native Platform</text>
+  <text x="450" y="72" text-anchor="middle" font-size="13" fill="#64748b" font-family="ui-sans-serif,system-ui,sans-serif">Zero-Cost Cloud-Native Architecture for PyLoom Services on Kubernetes &amp; GitOps</text>
 
   <!-- ═══ ZONE: Developer ═══ -->
   <rect x="40" y="96" width="820" height="64" rx="10" fill="#1e293b" stroke="#334155" stroke-width="1"/>
@@ -73,11 +73,11 @@
   <line x1="540" y1="260" x2="554" y2="260" stroke="#334155" stroke-width="1" marker-end="url(#arr-white)"/>
   <line x1="700" y1="260" x2="714" y2="260" stroke="#334155" stroke-width="1" marker-end="url(#arr-white)"/>
 
-  <!-- Amazon ECR box -->
+  <!-- GitHub Container Registry box -->
   <line x1="468" y1="314" x2="468" y2="340" stroke="#334155" stroke-width="1.5" marker-end="url(#arr-white)"/>
-  <rect x="300" y="340" width="300" height="48" rx="8" fill="#1c1917" stroke="#f97316" stroke-width="1"/>
-  <text x="450" y="360" text-anchor="middle" font-size="12" font-weight="600" fill="#fed7aa" font-family="ui-sans-serif,system-ui,sans-serif">Amazon ECR</text>
-  <text x="450" y="378" text-anchor="middle" font-size="11" fill="#fb923c" font-family="ui-sans-serif,system-ui,sans-serif">:sha tag + :latest · ECR vulnerability scan</text>
+  <rect x="300" y="340" width="300" height="48" rx="8" fill="#1c1917" stroke="#3b82f6" stroke-width="1"/>
+  <text x="450" y="360" text-anchor="middle" font-size="12" font-weight="600" fill="#93c5fd" font-family="ui-sans-serif,system-ui,sans-serif">GitHub Container Registry (GHCR)</text>
+  <text x="450" y="378" text-anchor="middle" font-size="11" fill="#60a5fa" font-family="ui-sans-serif,system-ui,sans-serif">ghcr.io · Cosign Keyless Signed · $0 Free Tier</text>
 
   <line x1="450" y1="388" x2="450" y2="414" stroke="#334155" stroke-width="1.5" marker-end="url(#arr-white)"/>
 
@@ -109,9 +109,9 @@
 
   <line x1="450" y1="600" x2="450" y2="626" stroke="#334155" stroke-width="1.5" marker-end="url(#arr-white)"/>
 
-  <!-- EKS cluster outer box -->
+  <!-- Kubernetes cluster outer box -->
   <rect x="40" y="626" width="820" height="280" rx="10" fill="#0f1629" stroke="#1e40af" stroke-width="1.5" stroke-dasharray="6 3"/>
-  <text x="80" y="646" font-size="11" fill="#3b82f6" font-family="ui-sans-serif,system-ui,sans-serif">AWS EKS CLUSTER — 3 × t3.medium · 3 Availability Zones · Private Subnets</text>
+  <text x="80" y="646" font-size="11" fill="#3b82f6" font-family="ui-sans-serif,system-ui,sans-serif">KUBERNETES CLUSTER (K3s / EKS) — Cloudflare Tunnel Ingress · Zero Open Ports · Isolated VPC / VPS</text>
 
   <!-- Linkerd box inside EKS -->
   <rect x="60" y="658" width="360" height="232" rx="8" fill="#1e293b" stroke="#22d3ee" stroke-width="1"/>
@@ -171,24 +171,24 @@
 
   <line x1="450" y1="906" x2="450" y2="932" stroke="#334155" stroke-width="1.5" marker-end="url(#arr-white)"/>
 
-  <!-- FinOps + Backstage row -->
+  <!-- FinOps + Platform row -->
   <rect x="40" y="932" width="390" height="72" rx="10" fill="#1e293b" stroke="#334155" stroke-width="1"/>
   <rect x="56" y="944" width="10" height="48" rx="5" fill="#10b981"/>
-  <text x="80" y="960" font-size="11" fill="#94a3b8" font-family="ui-sans-serif,system-ui,sans-serif">KUBECOST FINOPS</text>
-  <text x="80" y="978" font-size="13" font-weight="600" fill="#e2e8f0" font-family="ui-sans-serif,system-ui,sans-serif">Per-namespace cost · rightsizing</text>
-  <text x="80" y="994" font-size="11" fill="#64748b" font-family="ui-sans-serif,system-ui,sans-serif">Budget alerts · weekly Slack cost report</text>
+  <text x="80" y="960" font-size="11" fill="#94a3b8" font-family="ui-sans-serif,system-ui,sans-serif">ZERO-COST FINOPS ARCHITECTURE</text>
+  <text x="80" y="978" font-size="13" font-weight="600" fill="#e2e8f0" font-family="ui-sans-serif,system-ui,sans-serif">$0/month compute · Cloudflare R2 Backups</text>
+  <text x="80" y="994" font-size="11" fill="#64748b" font-family="ui-sans-serif,system-ui,sans-serif">Oracle Always-Free / K3s · Automated daily dumps</text>
 
   <rect x="470" y="932" width="390" height="72" rx="10" fill="#1e293b" stroke="#334155" stroke-width="1"/>
   <rect x="486" y="944" width="10" height="48" rx="5" fill="#f59e0b"/>
-  <text x="510" y="960" font-size="11" fill="#94a3b8" font-family="ui-sans-serif,system-ui,sans-serif">BACKSTAGE DEVELOPER PORTAL</text>
-  <text x="510" y="978" font-size="13" font-weight="600" fill="#e2e8f0" font-family="ui-sans-serif,system-ui,sans-serif">Software catalog · OpenAPI spec</text>
-  <text x="510" y="994" font-size="11" fill="#64748b" font-family="ui-sans-serif,system-ui,sans-serif">Scaffolder template · dependency graph</text>
+  <text x="510" y="960" font-size="11" fill="#94a3b8" font-family="ui-sans-serif,system-ui,sans-serif">PYLOOM CLOUD CONSOLE &amp; APIS</text>
+  <text x="510" y="978" font-size="13" font-weight="600" fill="#e2e8f0" font-family="ui-sans-serif,system-ui,sans-serif">Multi-tenant client hub · Live console UI</text>
+  <text x="510" y="994" font-size="11" fill="#64748b" font-family="ui-sans-serif,system-ui,sans-serif">Client accounts · Project services · Inquiries</text>
 
   <!-- TERRAFORM / IaC row -->
   <rect x="40" y="1020" width="820" height="56" rx="10" fill="#1e293b" stroke="#334155" stroke-width="1"/>
   <rect x="56" y="1032" width="10" height="32" rx="5" fill="#8b5cf6"/>
-  <text x="80" y="1048" font-size="11" fill="#94a3b8" font-family="ui-sans-serif,system-ui,sans-serif">TERRAFORM INFRASTRUCTURE AS CODE</text>
-  <text x="80" y="1064" font-size="12" fill="#c4b5fd" font-family="ui-sans-serif,system-ui,sans-serif">VPC (3 AZs · public + private subnets · NAT gateways)  ·  EKS cluster (OIDC · KMS encryption)  ·  ECR  ·  IAM least-privilege  ·  RDS</text>
+  <text x="80" y="1048" font-size="11" fill="#94a3b8" font-family="ui-sans-serif,system-ui,sans-serif">INFRASTRUCTURE AS CODE &amp; GITOPS AUTOMATION</text>
+  <text x="80" y="1064" font-size="12" fill="#c4b5fd" font-family="ui-sans-serif,system-ui,sans-serif">Cloudflare Tunnels (zero open ports)  ·  K3s / EKS Cluster  ·  GHCR  ·  PostgreSQL R2 Backups  ·  ArgoCD Self-Healing</text>
 
   <!-- Legend -->
   <rect x="40" y="1092" width="820" height="64" rx="8" fill="#1e293b" stroke="#334155" stroke-width="1"/>
@@ -197,8 +197,8 @@
   <rect x="80" y="1120" width="12" height="12" rx="2" fill="#22c55e"/>
   <text x="98" y="1131" font-size="11" fill="#94a3b8" font-family="ui-sans-serif,system-ui,sans-serif">CI/CD · Testing</text>
 
-  <rect x="220" y="1120" width="12" height="12" rx="2" fill="#f97316"/>
-  <text x="238" y="1131" font-size="11" fill="#94a3b8" font-family="ui-sans-serif,system-ui,sans-serif">AWS / Registry</text>
+  <rect x="220" y="1120" width="12" height="12" rx="2" fill="#3b82f6"/>
+  <text x="238" y="1131" font-size="11" fill="#94a3b8" font-family="ui-sans-serif,system-ui,sans-serif">GHCR · Registry</text>
 
   <rect x="360" y="1120" width="12" height="12" rx="2" fill="#3b82f6"/>
   <text x="378" y="1131" font-size="11" fill="#94a3b8" font-family="ui-sans-serif,system-ui,sans-serif">Kubernetes · Deployment</text>
@@ -210,5 +210,5 @@
   <text x="698" y="1131" font-size="11" fill="#94a3b8" font-family="ui-sans-serif,system-ui,sans-serif">Observability</text>
 
   <!-- Footer -->
-  <text x="450" y="1300" text-anchor="middle" font-size="11" fill="#334155" font-family="ui-sans-serif,system-ui,sans-serif">github.com/aryalrishi29-blip/orbital · Built by Rishi Aryal</text>
+  <text x="450" y="1300" text-anchor="middle" font-size="11" fill="#334155" font-family="ui-sans-serif,system-ui,sans-serif">github.com/RishiAryal24/orbital · PyLoom Technologies</text>
 </svg>
