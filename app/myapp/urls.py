@@ -18,6 +18,8 @@ from .views import (
     ApplicationDeploymentListView,
     ApplicationDeploymentDetailView,
     ManagedAddonListView,
+    GitHubWebhookView,
+    ApplicationEventsListView,
 )
 
 urlpatterns = [
@@ -38,7 +40,10 @@ urlpatterns = [
     path("api/servers/<int:pk>/bootstrap.sh", ServerBootstrapScriptView.as_view(), name="server-bootstrap"),
     path("api/apps/", ApplicationDeploymentListView.as_view(), name="app-list"),
     path("api/apps/<int:pk>/", ApplicationDeploymentDetailView.as_view(), name="app-detail"),
+    path("api/apps/<int:pk>/events/", ApplicationEventsListView.as_view(), name="app-events"),
     path("api/addons/", ManagedAddonListView.as_view(), name="addon-list"),
+    # Push-to-Deploy GitHub Webhook
+    path("api/webhooks/github/<str:slug>/", GitHubWebhookView.as_view(), name="github-webhook"),
     # Backward compatibility endpoints
     path("api/articles/", ArticleListView.as_view(), name="article-list"),
     path("api/articles/<int:pk>/", ArticleDetailView.as_view(), name="article-detail"),

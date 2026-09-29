@@ -185,6 +185,10 @@ class ApplicationDeployment(models.Model):
     status                = models.CharField(max_length=30, choices=STATUS_CHOICES, default="pending")
     current_image         = models.CharField(max_length=255, blank=True)
     argo_app_name         = models.CharField(max_length=150, blank=True)
+    webhook_secret        = models.CharField(max_length=100, blank=True)
+    auto_deploy           = models.BooleanField(default=True)
+    latest_commit_sha     = models.CharField(max_length=40, blank=True)
+    latest_commit_message = models.CharField(max_length=255, blank=True)
     last_deployed_at      = models.DateTimeField(null=True, blank=True)
     created_at            = models.DateTimeField(default=timezone.now)
     updated_at            = models.DateTimeField(auto_now=True)
@@ -195,6 +199,31 @@ class ApplicationDeployment(models.Model):
 
     def __str__(self) -> str:
         return f"{self.name} [{self.build_type}] - {self.status}"
+
+
+class DeploymentEvent(models.Model):
+    """Tracks continuous delivery Git push events and rollout executions."""
+
+    STATUS_CHOICES = [
+        ("queued", "Queued"),
+        ("building", "Building & Scanning"),
+        ("deployed", "Blue/Green Deployed"),
+        ("failed", "Failed / Rolled Back"),
+    ]
+
+    application      = models.ForeignKey(ApplicationDeployment, related_name="events", on_delete=models.CASCADE)
+    commit_sha       = models.CharField(max_length=40)
+    commit_message   = models.CharField(max_length=255, blank=True)
+    sender           = models.CharField(max_length=100, default="github")
+    status           = models.CharField(max_length=30, choices=STATUS_CHOICES, default="queued")
+    rollout_strategy = models.CharField(max_length=30, default="blueGreen")
+    created_at       = models.DateTimeField(default=timezone.now)
+
+    class Meta:
+        ordering = ["-created_at"]
+
+    def __str__(self) -> str:
+        return f"{self.application.name} [{self.commit_sha[:7]}] - {self.status}"
 
 
 class ManagedAddon(models.Model):

@@ -4,11 +4,22 @@ Test suite for PyLoom Technologies Cloud Platform service.
 Run locally:
     python manage.py test myapp --verbosity=2
 """
+import hashlib
+import hmac
 import json
 
 from django.test import Client, TestCase
 
-from .models import Article, ClientAccount, DeploymentInquiry, ProjectService
+from .models import (
+    Article,
+    ClientAccount,
+    DeploymentInquiry,
+    ProjectService,
+    ServerNode,
+    ApplicationDeployment,
+    ManagedAddon,
+    DeploymentEvent,
+)
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -391,4 +402,117 @@ class PaaSServerAndAppTests(TestCase):
         self.assertEqual(data["addon_type"], "postgres")
         self.assertEqual(data["status"], "running")
         self.assertIn("postgres://megacorp", data["connection_uri"])
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# 7. GitHub Webhook Push-to-Deploy & Audit Event Tests
+# ─────────────────────────────────────────────────────────────────────────────
+class GitHubWebhookPushToDeployTests(TestCase):
+    def setUp(self):
+        self.client = Client()
+        self.account = ClientAccount.objects.create(
+            name="SaaS Labs", slug="saaslabs", contact_email="ops@saaslabs.io", tier="pro"
+        )
+        self.secret = "super_webhook_secret_999"
+        self.app = ApplicationDeployment.objects.create(
+            client=self.account,
+            name="Billing Microservice",
+            slug="billing-ms",
+            git_repo_url="https://github.com/saaslabs/billing.git",
+            git_branch="main",
+            webhook_secret=self.secret,
+            auto_deploy=True,
+            status="active",
+        )
+
+    def _compute_sig(self, payload_bytes: bytes) -> str:
+        digest = hmac.new(self.secret.encode("utf-8"), payload_bytes, hashlib.sha256).hexdigest()
+        return f"sha256={digest}"
+
+    def test_github_webhook_ping_returns_pong(self):
+        body_bytes = b"{}"
+        sig = self._compute_sig(body_bytes)
+        res = self.client.post(
+            f"/api/webhooks/github/{self.app.slug}/",
+            data=body_bytes,
+            content_type="application/json",
+            HTTP_X_GITHUB_EVENT="ping",
+            HTTP_X_HUB_SIGNATURE_256=sig,
+        )
+        self.assertEqual(res.status_code, 200)
+        self.assertEqual(json.loads(res.content)["status"], "pong")
+
+    def test_github_webhook_push_triggers_blue_green_deployment(self):
+        payload = {
+            "ref": "refs/heads/main",
+            "after": "a1b2c3d4e5f678901234567890abcdef12345678",
+            "head_commit": {
+                "id": "a1b2c3d4e5f678901234567890abcdef12345678",
+                "message": "feat(stripe): add support for recurring customer billing",
+            },
+            "sender": {"login": "rishiaryal"},
+        }
+        body_bytes = json.dumps(payload).encode("utf-8")
+        sig = self._compute_sig(body_bytes)
+
+        res = self.client.post(
+            f"/api/webhooks/github/{self.app.slug}/",
+            data=body_bytes,
+            content_type="application/json",
+            HTTP_X_GITHUB_EVENT="push",
+            HTTP_X_HUB_SIGNATURE_256=sig,
+        )
+        self.assertEqual(res.status_code, 200)
+        data = json.loads(res.content)
+        self.assertTrue(data["success"])
+        self.assertEqual(data["commit_sha"], "a1b2c3d")
+        self.assertIn("ghcr.io/saaslabs/billing-ms:a1b2c3d", data["image"])
+
+        # Check app database state
+        self.app.refresh_from_db()
+        self.assertEqual(self.app.latest_commit_sha, "a1b2c3d")
+        self.assertEqual(self.app.latest_commit_message, "feat(stripe): add support for recurring customer billing")
+        self.assertEqual(self.app.status, "active")
+
+        # Check audit event was recorded
+        events_res = self.client.get(f"/api/apps/{self.app.id}/events/")
+        self.assertEqual(events_res.status_code, 200)
+        events_data = json.loads(events_res.content)
+        self.assertEqual(events_data["total_events"], 1)
+        self.assertEqual(events_data["events"][0]["sender"], "rishiaryal")
+        self.assertEqual(events_data["events"][0]["status"], "deployed")
+
+    def test_github_webhook_rejects_invalid_hmac_signature(self):
+        payload = {"ref": "refs/heads/main"}
+        body_bytes = json.dumps(payload).encode("utf-8")
+
+        res = self.client.post(
+            f"/api/webhooks/github/{self.app.slug}/",
+            data=body_bytes,
+            content_type="application/json",
+            HTTP_X_GITHUB_EVENT="push",
+            HTTP_X_HUB_SIGNATURE_256="sha256=invalid_tampered_signature_hex",
+        )
+        self.assertEqual(res.status_code, 401)
+        self.assertIn("Invalid webhook HMAC signature", json.loads(res.content)["error"])
+
+    def test_github_webhook_ignores_unrelated_branches(self):
+        payload = {
+            "ref": "refs/heads/feature-wip",
+            "head_commit": {"id": "111222333444", "message": "wip"},
+        }
+        body_bytes = json.dumps(payload).encode("utf-8")
+        sig = self._compute_sig(body_bytes)
+
+        res = self.client.post(
+            f"/api/webhooks/github/{self.app.slug}/",
+            data=body_bytes,
+            content_type="application/json",
+            HTTP_X_GITHUB_EVENT="push",
+            HTTP_X_HUB_SIGNATURE_256=sig,
+        )
+        self.assertEqual(res.status_code, 400)
+        self.assertFalse(json.loads(res.content)["success"])
+        self.assertIn("Ignored push", json.loads(res.content)["message"])
+
 

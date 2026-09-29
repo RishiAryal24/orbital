@@ -6,10 +6,12 @@ from .manifest_synthesizer import ManifestSynthesizer
 from .addon_provisioner import AddonProvisioner
 from .cloudflare_service import CloudflareService
 from .vps_provisioner import VPSProvisioner
+from .webhook_service import GitHubWebhookService
 
 __all__ = [
     "ManifestSynthesizer",
     "AddonProvisioner",
     "CloudflareService",
     "VPSProvisioner",
+    "GitHubWebhookService",
 ]

@@ -14,12 +14,14 @@ from .models import (
     ServerNode,
     ApplicationDeployment,
     ManagedAddon,
+    DeploymentEvent,
 )
 from .services import (
     ManifestSynthesizer,
     AddonProvisioner,
     CloudflareService,
     VPSProvisioner,
+    GitHubWebhookService,
 )
 
 
@@ -1001,4 +1003,88 @@ class ManagedAddonListView(View):
             },
             status=201,
         )
+
+
+@method_decorator(csrf_exempt, name="dispatch")
+class GitHubWebhookView(View):
+    """
+    POST /api/webhooks/github/<str:slug>/
+    Receives incoming push events from GitHub, validates HMAC-SHA256 signature,
+    and executes automated zero-downtime Blue/Green rollouts.
+    """
+
+    def post(self, request, slug):
+        try:
+            app = ApplicationDeployment.objects.select_related("client", "server").get(slug=slug)
+        except ApplicationDeployment.DoesNotExist:
+            return JsonResponse({"error": "Application not found"}, status=404)
+
+        signature = request.headers.get("X-Hub-Signature-256")
+        if app.webhook_secret and not GitHubWebhookService.verify_signature(request.body, app.webhook_secret, signature):
+            return JsonResponse({"error": "Invalid webhook HMAC signature"}, status=401)
+
+        event_type = request.headers.get("X-GitHub-Event", "push")
+        if event_type == "ping":
+            return JsonResponse({"status": "pong", "message": "GitHub webhook ping acknowledged."})
+
+        if event_type != "push":
+            return JsonResponse({"status": "ignored", "message": f"Event type '{event_type}' ignored."})
+
+        try:
+            payload = json.loads(request.body)
+        except (ValueError, TypeError):
+            return JsonResponse({"error": "Invalid JSON payload"}, status=400)
+
+        success, message, event = GitHubWebhookService.process_push_event(payload, app)
+        status_code = 200 if success else 400
+
+        response_data = {
+            "success": success,
+            "message": message,
+            "app": app.slug,
+            "status": app.status,
+            "image": app.current_image,
+        }
+        if event:
+            response_data["event_id"] = event.id
+            response_data["commit_sha"] = event.commit_sha[:7]
+
+        return JsonResponse(response_data, status=status_code)
+
+
+@method_decorator(csrf_exempt, name="dispatch")
+class ApplicationEventsListView(View):
+    """
+    GET /api/apps/<int:pk>/events/
+    Returns the deployment audit history and Git push events for an application.
+    """
+
+    def get(self, request, pk):
+        try:
+            app = ApplicationDeployment.objects.get(pk=pk)
+        except ApplicationDeployment.DoesNotExist:
+            return JsonResponse({"error": "Application not found"}, status=404)
+
+        events = []
+        for e in app.events.all()[:20]:
+            events.append(
+                {
+                    "id": e.id,
+                    "commit_sha": e.commit_sha[:7],
+                    "commit_message": e.commit_message,
+                    "sender": e.sender,
+                    "status": e.status,
+                    "rollout_strategy": e.rollout_strategy,
+                    "created_at": e.created_at.isoformat(),
+                }
+            )
+
+        return JsonResponse(
+            {
+                "app": app.slug,
+                "total_events": app.events.count(),
+                "events": events,
+            }
+        )
+
 
