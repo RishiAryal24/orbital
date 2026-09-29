@@ -289,3 +289,106 @@ class ArticleCompatibilityTests(TestCase):
 
         res_detail = self.client.get(f"/api/articles/{self.article.id}/")
         self.assertEqual(res_detail.status_code, 200)
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# 6. Commercial PaaS Tests: Servers, Zero-YAML Manifests, Add-ons
+# ─────────────────────────────────────────────────────────────────────────────
+class PaaSServerAndAppTests(TestCase):
+    def setUp(self):
+        self.client = Client()
+        self.account = ClientAccount.objects.create(
+            name="Acme Corp", slug="acmecorp", contact_email="dev@acme.com", tier="starter"
+        )
+        self.growth_account = ClientAccount.objects.create(
+            name="Mega Corp", slug="megacorp", contact_email="dev@mega.com", tier="pro"
+        )
+
+    def test_register_server_generates_agent_command(self):
+        payload = {
+            "name": "Hetzner-Node-1",
+            "ip_address": "159.69.100.50",
+            "client_id": self.account.id,
+            "cpu_cores": 4,
+            "ram_mb": 8192,
+        }
+        res = self.client.post("/api/servers/", data=json.dumps(payload), content_type="application/json")
+        self.assertEqual(res.status_code, 201)
+        data = json.loads(res.content)
+        self.assertEqual(data["name"], "Hetzner-Node-1")
+        self.assertIn("agent_command", data)
+        self.assertIn("curl -fsSL", data["agent_command"])
+
+    def test_starter_tier_enforces_one_server_quota(self):
+        # First server succeeds
+        payload = {"name": "Server-1", "ip_address": "10.0.0.1", "client_id": self.account.id}
+        res1 = self.client.post("/api/servers/", data=json.dumps(payload), content_type="application/json")
+        self.assertEqual(res1.status_code, 201)
+
+        # Second server on starter tier must be rejected with 403
+        payload2 = {"name": "Server-2", "ip_address": "10.0.0.2", "client_id": self.account.id}
+        res2 = self.client.post("/api/servers/", data=json.dumps(payload2), content_type="application/json")
+        self.assertEqual(res2.status_code, 403)
+        self.assertIn("Starter tier allows a maximum of 1", json.loads(res2.content)["error"])
+
+    def test_server_bootstrap_script_endpoint_returns_bash(self):
+        payload = {"name": "Ubuntu-Node", "ip_address": "10.0.0.5", "client_id": self.growth_account.id}
+        res = self.client.post("/api/servers/", data=json.dumps(payload), content_type="application/json")
+        server_id = json.loads(res.content)["id"]
+
+        script_res = self.client.get(f"/api/servers/{server_id}/bootstrap.sh")
+        self.assertEqual(script_res.status_code, 200)
+        self.assertIn("#!/usr/bin/env bash", script_res.content.decode())
+        self.assertIn("Installing K3s", script_res.content.decode())
+        self.assertIn("argo-rollouts", script_res.content.decode())
+
+    def test_deploy_application_synthesizes_zero_yaml_blue_green(self):
+        payload = {
+            "name": "Payments API",
+            "slug": "payments-api",
+            "git_repo_url": "https://github.com/acme/payments.git",
+            "client_id": self.account.id,
+            "target_port": 8000,
+            "replicas": 3,
+            "domain": "pay.acmecorp.com",
+            "environment_variables": {"STRIPE_ENV": "production"},
+        }
+        res = self.client.post("/api/apps/", data=json.dumps(payload), content_type="application/json")
+        self.assertEqual(res.status_code, 201)
+        data = json.loads(res.content)
+        self.assertEqual(data["slug"], "payments-api")
+        self.assertEqual(data["domain"], "pay.acmecorp.com")
+        self.assertEqual(data["status"], "active")
+
+        # Verify application detail returns full synthesized YAML
+        app_id = data["id"]
+        detail_res = self.client.get(f"/api/apps/{app_id}/")
+        self.assertEqual(detail_res.status_code, 200)
+        detail_data = json.loads(detail_res.content)
+        yaml_content = detail_data["synthesized_yaml"]
+        self.assertIn("kind: Rollout", yaml_content)
+        self.assertIn("blueGreen:", yaml_content)
+        self.assertIn("payments-api-active", yaml_content)
+        self.assertIn("payments-api-preview", yaml_content)
+        self.assertIn("kind: Ingress", yaml_content)
+
+    def test_provision_database_addon_with_r2_backups(self):
+        # Register a server first
+        s_payload = {"name": "DB-Server", "ip_address": "10.0.0.9", "client_id": self.growth_account.id}
+        s_res = self.client.post("/api/servers/", data=json.dumps(s_payload), content_type="application/json")
+        server_id = json.loads(s_res.content)["id"]
+
+        addon_payload = {
+            "name": "Production Postgres",
+            "addon_type": "postgres",
+            "client_id": self.growth_account.id,
+            "server_id": server_id,
+            "allocated_storage_gb": 20,
+        }
+        res = self.client.post("/api/addons/", data=json.dumps(addon_payload), content_type="application/json")
+        self.assertEqual(res.status_code, 201)
+        data = json.loads(res.content)
+        self.assertEqual(data["addon_type"], "postgres")
+        self.assertEqual(data["status"], "running")
+        self.assertIn("postgres://megacorp", data["connection_uri"])
+

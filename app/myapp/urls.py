@@ -12,6 +12,12 @@ from .views import (
     PlatformStatusView,
     ProjectServiceDetailView,
     ProjectServiceListView,
+    ServerNodeListView,
+    ServerNodeDetailView,
+    ServerBootstrapScriptView,
+    ApplicationDeploymentListView,
+    ApplicationDeploymentDetailView,
+    ManagedAddonListView,
 )
 
 urlpatterns = [
@@ -26,6 +32,13 @@ urlpatterns = [
     path("api/services/", ProjectServiceListView.as_view(), name="service-list"),
     path("api/services/<int:pk>/", ProjectServiceDetailView.as_view(), name="service-detail"),
     path("api/inquiries/", DeploymentInquiryListView.as_view(), name="inquiry-list"),
+    # PaaS BYOVPS Endpoints
+    path("api/servers/", ServerNodeListView.as_view(), name="server-list"),
+    path("api/servers/<int:pk>/", ServerNodeDetailView.as_view(), name="server-detail"),
+    path("api/servers/<int:pk>/bootstrap.sh", ServerBootstrapScriptView.as_view(), name="server-bootstrap"),
+    path("api/apps/", ApplicationDeploymentListView.as_view(), name="app-list"),
+    path("api/apps/<int:pk>/", ApplicationDeploymentDetailView.as_view(), name="app-detail"),
+    path("api/addons/", ManagedAddonListView.as_view(), name="addon-list"),
     # Backward compatibility endpoints
     path("api/articles/", ArticleListView.as_view(), name="article-list"),
     path("api/articles/<int:pk>/", ArticleDetailView.as_view(), name="article-detail"),

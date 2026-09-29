@@ -114,3 +114,121 @@ class Article(models.Model):
         """Mark the article as published and persist only the changed fields."""
         self.published = True
         self.save(update_fields=["published", "updated_at"])
+
+
+class ServerNode(models.Model):
+    """Represents a connected client VPS node (BYOVPS model)."""
+
+    STATUS_CHOICES = [
+        ("pending", "Pending Registration"),
+        ("provisioning", "Provisioning K3s & GitOps"),
+        ("ready", "Ready (Active Cluster Node)"),
+        ("failed", "Provisioning Failed"),
+        ("offline", "Node Offline"),
+    ]
+
+    client                  = models.ForeignKey(ClientAccount, related_name="servers", on_delete=models.CASCADE)
+    name                    = models.CharField(max_length=150)
+    ip_address              = models.GenericIPAddressField()
+    ssh_port                = models.IntegerField(default=22)
+    ssh_user                = models.CharField(max_length=50, default="root")
+    ssh_auth_type           = models.CharField(max_length=20, default="key")
+    ssh_credential          = models.TextField(blank=True, help_text="Encrypted SSH private key or password")
+    status                  = models.CharField(max_length=30, choices=STATUS_CHOICES, default="pending")
+    k3s_version             = models.CharField(max_length=50, default="v1.30.0+k3s1")
+    cpu_cores               = models.IntegerField(default=2)
+    ram_mb                  = models.IntegerField(default=4096)
+    disk_gb                 = models.IntegerField(default=50)
+    cloudflare_tunnel_id    = models.CharField(max_length=100, blank=True)
+    cloudflare_tunnel_token = models.TextField(blank=True)
+    created_at              = models.DateTimeField(default=timezone.now)
+    updated_at              = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ["-created_at"]
+
+    def __str__(self) -> str:
+        return f"{self.name} ({self.ip_address}) - {self.status}"
+
+
+class ApplicationDeployment(models.Model):
+    """Represents a dynamic Git-to-Deploy application with automated Blue/Green Rollouts."""
+
+    BUILD_CHOICES = [
+        ("dockerfile", "Dockerfile"),
+        ("nixpacks", "Nixpacks (Auto-Detect)"),
+        ("python", "Python / WSGI / ASGI"),
+        ("nodejs", "Node.js / Next.js"),
+        ("go", "Golang Static Binary"),
+    ]
+
+    STATUS_CHOICES = [
+        ("pending", "Pending Deployment"),
+        ("building", "Building & Scanning Image"),
+        ("deploying", "Deploying Rollout"),
+        ("active", "Active (Zero-Downtime)"),
+        ("degraded", "Degraded Performance"),
+        ("rolled_back", "Rolled Back to Stable"),
+    ]
+
+    client                = models.ForeignKey(ClientAccount, related_name="applications", on_delete=models.CASCADE)
+    server                = models.ForeignKey(ServerNode, related_name="applications", on_delete=models.SET_NULL, null=True, blank=True)
+    name                  = models.CharField(max_length=150)
+    slug                  = models.SlugField(max_length=150)
+    git_repo_url          = models.URLField()
+    git_branch            = models.CharField(max_length=100, default="main")
+    build_type            = models.CharField(max_length=30, choices=BUILD_CHOICES, default="dockerfile")
+    target_port           = models.IntegerField(default=8000)
+    replicas              = models.IntegerField(default=2)
+    domain                = models.CharField(max_length=255, blank=True)
+    environment_variables = models.JSONField(default=dict, blank=True)
+    status                = models.CharField(max_length=30, choices=STATUS_CHOICES, default="pending")
+    current_image         = models.CharField(max_length=255, blank=True)
+    argo_app_name         = models.CharField(max_length=150, blank=True)
+    last_deployed_at      = models.DateTimeField(null=True, blank=True)
+    created_at            = models.DateTimeField(default=timezone.now)
+    updated_at            = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ["-created_at"]
+        unique_together = ["client", "slug"]
+
+    def __str__(self) -> str:
+        return f"{self.name} [{self.build_type}] - {self.status}"
+
+
+class ManagedAddon(models.Model):
+    """Represents a one-click database or cache add-on with automated R2 backups."""
+
+    ADDON_CHOICES = [
+        ("postgres", "PostgreSQL 16 High-Performance DB"),
+        ("redis", "Redis 7 In-Memory Cache"),
+        ("mysql", "MySQL 8 Relational Database"),
+        ("clickhouse", "ClickHouse Analytical OLAP DB"),
+    ]
+
+    STATUS_CHOICES = [
+        ("provisioning", "Provisioning"),
+        ("running", "Running & Healthy"),
+        ("backup_active", "Running (Backups Active)"),
+        ("stopped", "Stopped"),
+    ]
+
+    client               = models.ForeignKey(ClientAccount, related_name="addons", on_delete=models.CASCADE)
+    server               = models.ForeignKey(ServerNode, related_name="addons", on_delete=models.CASCADE)
+    name                 = models.CharField(max_length=150)
+    addon_type           = models.CharField(max_length=30, choices=ADDON_CHOICES, default="postgres")
+    status               = models.CharField(max_length=30, choices=STATUS_CHOICES, default="provisioning")
+    allocated_storage_gb = models.IntegerField(default=10)
+    connection_uri       = models.CharField(max_length=500, blank=True)
+    r2_backup_enabled    = models.BooleanField(default=True)
+    last_backup_at       = models.DateTimeField(null=True, blank=True)
+    created_at           = models.DateTimeField(default=timezone.now)
+    updated_at           = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ["-created_at"]
+
+    def __str__(self) -> str:
+        return f"{self.name} ({self.addon_type}) - {self.status}"
+

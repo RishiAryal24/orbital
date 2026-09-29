@@ -465,11 +465,12 @@
         <span class="brand-tag">v1.0.0</span>
       </a>
       <nav class="nav-links">
+        <a href="#servers" class="nav-link">Servers (BYOVPS)</a>
+        <a href="#apps" class="nav-link">Applications</a>
+        <a href="#addons" class="nav-link">Databases</a>
         <a href="#services" class="nav-link">Cloud Services</a>
-        <a href="#clients" class="nav-link">Client Accounts</a>
         <a href="/api/status/" class="nav-link">Platform Status</a>
-        <a href="/health/" class="nav-link">Health Check</a>
-        <a href="#inquiry" class="btn-cta">Request Deployment</a>
+        <a href="#inquiry" class="btn-cta">Connect VPS</a>
       </nav>
     </div>
   </header>
@@ -479,35 +480,183 @@
     <section class="hero">
       <div class="hero-badge">
         <div class="pulse-dot"></div>
-        <span>Production GitOps Platform — Operational</span>
+        <span>PyLoom Cloud Platform — Next-Gen BYOVPS PaaS Operational</span>
       </div>
-      <h1>Enterprise Cloud Services at <span>$0 Running Cost</span></h1>
+      <h1>Enterprise Cloud Services on <span>Your Own Hardware</span></h1>
       <p>
-        Zero-downtime Blue-Green deployments, Linkerd mTLS service mesh, distributed OpenTelemetry tracing, and automated DevSecOps on lightweight CNCF Kubernetes.
+        Zero-downtime Blue/Green Argo Rollouts, non-root hardened pods, automated Cosign image signing, and Cloudflare R2 zero-egress backups. Connect any raw VPS in seconds.
       </p>
     </section>
 
     <!-- Top Statistics Cards -->
-    <section class="stats-grid">
+    <section class="stats-grid" style="grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));">
+      <div class="stat-card">
+        <span class="stat-label">Connected Nodes</span>
+        <span class="stat-value">{{ total_servers|default:0 }}</span>
+        <span class="stat-sub">BYOVPS Clusters</span>
+      </div>
+      <div class="stat-card">
+        <span class="stat-label">Zero-YAML Apps</span>
+        <span class="stat-value">{{ total_applications|default:0 }}</span>
+        <span class="stat-sub">Blue/Green Rollouts</span>
+      </div>
+      <div class="stat-card">
+        <span class="stat-label">Managed Databases</span>
+        <span class="stat-value">{{ total_addons|default:0 }}</span>
+        <span class="stat-sub">Postgres / Redis / R2</span>
+      </div>
       <div class="stat-card">
         <span class="stat-label">Active Services</span>
         <span class="stat-value">{{ healthy_services }} / {{ total_services }}</span>
         <span class="stat-sub">Healthy & verified</span>
       </div>
       <div class="stat-card">
-        <span class="stat-label">Managed Clients</span>
-        <span class="stat-value">{{ total_clients }}</span>
-        <span class="stat-sub">Enterprise & Pro tiers</span>
-      </div>
-      <div class="stat-card">
-        <span class="stat-label">Infrastructure Spend</span>
+        <span class="stat-label">Cloud Overhead</span>
         <span class="stat-value">$0.00</span>
-        <span class="stat-sub">OCI Always-Free + Cloudflare</span>
+        <span class="stat-sub">Zero Egress Fees</span>
       </div>
-      <div class="stat-card">
-        <span class="stat-label">Deploy Strategy</span>
-        <span class="stat-value">GitOps</span>
-        <span class="stat-sub">Blue-Green via ArgoCD</span>
+    </section>
+
+    <!-- BYOVPS Server Nodes Section -->
+    <section id="servers" style="margin-bottom: 3.5rem;">
+      <div class="section-header">
+        <div class="section-title">
+          <h2>Connected VPS Nodes (BYOVPS)</h2>
+          <p>Client infrastructure running K3s & Cloudflare Zero Trust tunnels</p>
+        </div>
+        <a href="#inquiry" class="btn-cta" style="font-size: 0.825rem; padding: 0.5rem 1rem;">+ Attach VPS</a>
+      </div>
+
+      <div class="services-grid">
+        {% for server in servers %}
+        <div class="service-card">
+          <div class="service-top">
+            <div>
+              <h3 class="service-name">{{ server.name }}</h3>
+              <span class="client-tag">{{ server.client.name }}</span>
+            </div>
+            <span class="badge badge-{% if server.status == 'ready' %}healthy{% else %}deploying{% endif %}">
+              ● {{ server.status }}
+            </span>
+          </div>
+          <div class="service-details">
+            <div class="detail-item">
+              <span class="detail-label">IP ADDRESS</span>
+              <span class="detail-val">{{ server.ip_address }}</span>
+            </div>
+            <div class="detail-item">
+              <span class="detail-label">SPECS</span>
+              <span class="detail-val">{{ server.cpu_cores }} vCPU / {{ server.ram_mb }}MB</span>
+            </div>
+            <div class="detail-item">
+              <span class="detail-label">K8S RUNTIME</span>
+              <span class="detail-val">{{ server.k3s_version }}</span>
+            </div>
+            <div class="detail-item">
+              <span class="detail-label">INGRESS TUNNEL</span>
+              <span class="detail-val" style="color:#34d399;">Encrypted TLS</span>
+            </div>
+          </div>
+        </div>
+        {% empty %}
+        <div class="service-card" style="grid-column: 1 / -1; text-align: center; padding: 2rem;">
+          <p style="color: var(--text-muted); margin-bottom: 1rem;">No external VPS nodes attached yet. Connect any Hetzner, DigitalOcean, or OCI VPS in seconds.</p>
+          <code style="background: rgba(0,0,0,0.4); padding: 0.4rem 0.8rem; border-radius: 6px; font-size: 0.85rem; color: #60a5fa;">POST /api/servers/ {"name": "My-Node", "ip_address": "...", "client_id": 1}</code>
+        </div>
+        {% endfor %}
+      </div>
+    </section>
+
+    <!-- Zero-YAML Applications Section -->
+    <section id="apps" style="margin-bottom: 3.5rem;">
+      <div class="section-header">
+        <div class="section-title">
+          <h2>Applications & Blue/Green Rollouts</h2>
+          <p>Git-to-deploy microservices running zero-downtime canary switches</p>
+        </div>
+        <a href="#inquiry" class="btn-cta" style="font-size: 0.825rem; padding: 0.5rem 1rem;">+ Deploy Git Repo</a>
+      </div>
+
+      <div class="services-grid">
+        {% for app in applications %}
+        <div class="service-card">
+          <div class="service-top">
+            <div>
+              <h3 class="service-name">{{ app.name }}</h3>
+              <span class="client-tag">{{ app.client.name }}</span>
+            </div>
+            <span class="badge badge-{% if app.status == 'active' %}healthy{% else %}deploying{% endif %}">
+              ● {{ app.status }}
+            </span>
+          </div>
+          <div class="service-details">
+            <div class="detail-item">
+              <span class="detail-label">BUILD ENGINE</span>
+              <span class="detail-val">{{ app.build_type|upper }}</span>
+            </div>
+            <div class="detail-item">
+              <span class="detail-label">REPLICAS</span>
+              <span class="detail-val">{{ app.replicas }} Pods (HA)</span>
+            </div>
+            <div class="detail-item">
+              <span class="detail-label">DOMAIN</span>
+              {% if app.domain %}
+                <a href="https://{{ app.domain }}" target="_blank" class="detail-val" style="color:#60a5fa; text-decoration:none;">{{ app.domain }} ↗</a>
+              {% else %}
+                <span class="detail-val" style="color:var(--text-muted)">Cluster Internal</span>
+              {% endif %}
+            </div>
+            <div class="detail-item">
+              <span class="detail-label">GIT REPO</span>
+              <span class="detail-val" style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 130px;">{{ app.git_repo_url }}</span>
+            </div>
+          </div>
+        </div>
+        {% empty %}
+        <div class="service-card" style="grid-column: 1 / -1; text-align: center; padding: 2rem;">
+          <p style="color: var(--text-muted); margin-bottom: 1rem;">No applications deployed yet. Push code directly from GitHub with automated zero-YAML Argo Rollouts.</p>
+          <code style="background: rgba(0,0,0,0.4); padding: 0.4rem 0.8rem; border-radius: 6px; font-size: 0.85rem; color: #60a5fa;">POST /api/apps/ {"name": "Payments API", "git_repo_url": "...", "client_id": 1}</code>
+        </div>
+        {% endfor %}
+      </div>
+    </section>
+
+    <!-- Managed Databases Section -->
+    <section id="addons" style="margin-bottom: 3.5rem;">
+      <div class="section-header">
+        <div class="section-title">
+          <h2>One-Click Managed Databases</h2>
+          <p>Stateful persistence with automated Cloudflare R2 zero-egress daily snapshots</p>
+        </div>
+      </div>
+
+      <div class="services-grid">
+        {% for addon in addons %}
+        <div class="service-card">
+          <div class="service-top">
+            <div>
+              <h3 class="service-name">{{ addon.name }}</h3>
+              <span class="client-tag">{{ addon.get_addon_type_display }}</span>
+            </div>
+            <span class="badge badge-healthy">● {{ addon.status }}</span>
+          </div>
+          <div class="service-details">
+            <div class="detail-item">
+              <span class="detail-label">STORAGE</span>
+              <span class="detail-val">{{ addon.allocated_storage_gb }} GB PVC</span>
+            </div>
+            <div class="detail-item">
+              <span class="detail-label">R2 BACKUP</span>
+              <span class="detail-val" style="color:#34d399;">Active (Daily 02:00)</span>
+            </div>
+          </div>
+        </div>
+        {% empty %}
+        <div class="service-card" style="grid-column: 1 / -1; text-align: center; padding: 2rem;">
+          <p style="color: var(--text-muted); margin-bottom: 1rem;">One-click databases (Postgres, Redis, ClickHouse, MySQL) available via API.</p>
+          <code style="background: rgba(0,0,0,0.4); padding: 0.4rem 0.8rem; border-radius: 6px; font-size: 0.85rem; color: #60a5fa;">POST /api/addons/ {"name": "Main-DB", "addon_type": "postgres", "client_id": 1, "server_id": 1}</code>
+        </div>
+        {% endfor %}
       </div>
     </section>
 
