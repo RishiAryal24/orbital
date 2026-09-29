@@ -7,6 +7,7 @@ from .addon_provisioner import AddonProvisioner
 from .cloudflare_service import CloudflareService
 from .vps_provisioner import VPSProvisioner
 from .webhook_service import GitHubWebhookService
+from .language_detector import LanguageDetector
 
 __all__ = [
     "ManifestSynthesizer",
@@ -14,4 +15,5 @@ __all__ = [
     "CloudflareService",
     "VPSProvisioner",
     "GitHubWebhookService",
+    "LanguageDetector",
 ]

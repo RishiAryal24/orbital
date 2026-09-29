@@ -20,6 +20,7 @@ from .views import (
     ManagedAddonListView,
     GitHubWebhookView,
     ApplicationEventsListView,
+    LanguageDetectionView,
 )
 
 urlpatterns = [
@@ -39,6 +40,7 @@ urlpatterns = [
     path("api/servers/<int:pk>/", ServerNodeDetailView.as_view(), name="server-detail"),
     path("api/servers/<int:pk>/bootstrap.sh", ServerBootstrapScriptView.as_view(), name="server-bootstrap"),
     path("api/apps/", ApplicationDeploymentListView.as_view(), name="app-list"),
+    path("api/apps/detect/", LanguageDetectionView.as_view(), name="app-detect"),
     path("api/apps/<int:pk>/", ApplicationDeploymentDetailView.as_view(), name="app-detail"),
     path("api/apps/<int:pk>/events/", ApplicationEventsListView.as_view(), name="app-events"),
     path("api/addons/", ManagedAddonListView.as_view(), name="addon-list"),

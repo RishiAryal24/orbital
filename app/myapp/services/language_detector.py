@@ -1,0 +1,171 @@
+"""
+PyLoom Technologies — Language & Framework Auto-Detection Engine.
+
+Analyzes repository files and automatically determines the programming language,
+framework, target port, and start command. Generates optimized, production-grade,
+multi-stage, non-root Dockerfiles so developers don't have to write them manually.
+"""
+
+from typing import Any, Dict, List, Optional
+
+
+class LanguageDetector:
+    """Detects runtime language, framework, and entrypoint from repository file manifests."""
+
+    @classmethod
+    def detect(cls, files: List[str], file_contents: Optional[Dict[str, str]] = None) -> Dict[str, Any]:
+        """
+        Analyze a list of file paths (and optional contents) to determine project blueprint.
+        """
+        contents = file_contents or {}
+        file_set = {f.lower().strip() for f in files}
+
+        # 1. Dockerfile check (highest priority if already authored)
+        for f in file_set:
+            if f == "dockerfile" or f.endswith("/dockerfile"):
+                return {
+                    "language": "dockerfile",
+                    "framework": "custom-container",
+                    "build_type": "dockerfile",
+                    "target_port": 8000,
+                    "start_command": "CUSTOM",
+                    "confidence": 1.0,
+                    "generated_dockerfile": contents.get(f, "# Custom Dockerfile provided by repository"),
+                }
+
+        # 2. Python Detection
+        if any(f in file_set or f.endswith(("/requirements.txt", "/pyproject.toml", "/pipfile")) for f in ["requirements.txt", "pyproject.toml", "pipfile", "setup.py"]):
+            framework = "generic-python"
+            start_cmd = "python main.py"
+            port = 8000
+
+            # Inspect frameworks
+            if any("manage.py" in f for f in file_set):
+                framework = "django"
+                start_cmd = "gunicorn wsgi:application --bind 0.0.0.0:8000 --workers 3"
+            elif any("fastapi" in f for f in file_set) or "fastapi" in contents.get("requirements.txt", "").lower():
+                framework = "fastapi"
+                start_cmd = "uvicorn main:app --host 0.0.0.0 --port 8000 --workers 2"
+            elif any("app.py" in f for f in file_set):
+                framework = "flask"
+                start_cmd = "gunicorn app:app --bind 0.0.0.0:8000 --workers 3"
+
+            dockerfile = cls._generate_python_dockerfile(framework, start_cmd, port)
+            return {
+                "language": "python",
+                "framework": framework,
+                "build_type": "python",
+                "target_port": port,
+                "start_command": start_cmd,
+                "confidence": 0.95,
+                "generated_dockerfile": dockerfile,
+            }
+
+        # 3. Node.js / TypeScript Detection
+        if any(f in file_set or f.endswith(("/package.json", "/yarn.lock", "/pnpm-lock.yaml")) for f in ["package.json", "yarn.lock", "pnpm-lock.yaml", "package-lock.json"]):
+            framework = "node-app"
+            start_cmd = "npm start"
+            port = 3000
+
+            pkg_json = contents.get("package.json", "").lower()
+            if "next" in pkg_json or any("next.config" in f for f in file_set):
+                framework = "nextjs"
+                start_cmd = "npm start"
+            elif "express" in pkg_json:
+                framework = "express"
+                start_cmd = "node index.js"
+            elif "react" in pkg_json:
+                framework = "react-spa"
+                port = 80
+
+            dockerfile = cls._generate_node_dockerfile(framework, start_cmd, port)
+            return {
+                "language": "nodejs",
+                "framework": framework,
+                "build_type": "nodejs",
+                "target_port": port,
+                "start_command": start_cmd,
+                "confidence": 0.95,
+                "generated_dockerfile": dockerfile,
+            }
+
+        # 4. Golang Detection
+        if any(f in file_set or f.endswith(("/go.mod", "/go.sum", "/main.go")) for f in ["go.mod", "go.sum", "main.go"]):
+            port = 8080
+            dockerfile = cls._generate_go_dockerfile(port)
+            return {
+                "language": "go",
+                "framework": "golang-service",
+                "build_type": "go",
+                "target_port": port,
+                "start_command": "./app",
+                "confidence": 0.98,
+                "generated_dockerfile": dockerfile,
+            }
+
+        # 5. Fallback Generic
+        return {
+            "language": "unknown",
+            "framework": "raw-binary",
+            "build_type": "nixpacks",
+            "target_port": 8000,
+            "start_command": "./start.sh",
+            "confidence": 0.50,
+            "generated_dockerfile": "# Fallback: Auto-detected via Nixpacks engine\n",
+        }
+
+    @staticmethod
+    def _generate_python_dockerfile(framework: str, start_cmd: str, port: int) -> str:
+        return f"""# Generated by PyLoom Auto-Detection Engine ({framework.upper()})
+FROM python:3.12-slim AS builder
+WORKDIR /app
+RUN apt-get update && apt-get install -y --no-install-recommends gcc libpq-dev && rm -rf /var/lib/apt/lists/*
+COPY requirements*.txt ./
+RUN pip install --no-cache-dir --prefix=/install -r requirements.txt gunicorn
+
+FROM python:3.12-slim AS runtime
+WORKDIR /app
+COPY --from=builder /install /usr/local
+COPY . /app
+RUN useradd -m -u 1000 appuser && chown -R appuser:appuser /app
+USER 1000
+EXPOSE {port}
+CMD {start_cmd}
+"""
+
+    @staticmethod
+    def _generate_node_dockerfile(framework: str, start_cmd: str, port: int) -> str:
+        return f"""# Generated by PyLoom Auto-Detection Engine ({framework.upper()})
+FROM node:20-alpine AS builder
+WORKDIR /app
+COPY package*.json ./
+RUN npm ci
+COPY . .
+RUN if npm run | grep -q 'build'; then npm run build; fi
+
+FROM node:20-alpine AS runtime
+WORKDIR /app
+COPY --from=builder /app ./
+USER node
+EXPOSE {port}
+CMD {start_cmd}
+"""
+
+    @staticmethod
+    def _generate_go_dockerfile(port: int) -> str:
+        return f"""# Generated by PyLoom Auto-Detection Engine (GOLANG)
+FROM golang:1.22-alpine AS builder
+WORKDIR /app
+COPY go.* ./
+RUN go mod download
+COPY . .
+RUN CGO_ENABLED=0 GOOS=linux go build -ldflags="-w -s" -o /app/server .
+
+FROM alpine:3.19 AS runtime
+WORKDIR /app
+RUN addgroup -S appgroup && adduser -S appuser -G appgroup
+COPY --from=builder /app/server /app/server
+USER appuser
+EXPOSE {port}
+CMD ["/app/server"]
+"""

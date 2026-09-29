@@ -22,6 +22,7 @@ from .services import (
     CloudflareService,
     VPSProvisioner,
     GitHubWebhookService,
+    LanguageDetector,
 )
 
 
@@ -1086,5 +1087,29 @@ class ApplicationEventsListView(View):
                 "events": events,
             }
         )
+
+
+@method_decorator(csrf_exempt, name="dispatch")
+class LanguageDetectionView(View):
+    """
+    POST /api/apps/detect/
+    Analyzes project files and returns detected runtime, framework, target port,
+    and synthesized production-grade Dockerfile.
+    """
+
+    def post(self, request):
+        try:
+            data = json.loads(request.body)
+        except (ValueError, TypeError):
+            return JsonResponse({"error": "Invalid JSON body"}, status=400)
+
+        files = data.get("files", [])
+        if not files and data.get("repo_files"):
+            files = data.get("repo_files")
+
+        file_contents = data.get("file_contents", {})
+        result = LanguageDetector.detect(files, file_contents)
+        return JsonResponse(result, status=200)
+
 
 

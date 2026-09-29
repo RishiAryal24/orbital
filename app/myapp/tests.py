@@ -20,6 +20,8 @@ from .models import (
     ManagedAddon,
     DeploymentEvent,
 )
+from .services import LanguageDetector
+
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -514,5 +516,64 @@ class GitHubWebhookPushToDeployTests(TestCase):
         self.assertEqual(res.status_code, 400)
         self.assertFalse(json.loads(res.content)["success"])
         self.assertIn("Ignored push", json.loads(res.content)["message"])
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# 8. Language & Framework Auto-Detection Tests
+# ─────────────────────────────────────────────────────────────────────────────
+class LanguageAutoDetectionTests(TestCase):
+    def setUp(self):
+        self.client = Client()
+
+    def test_detect_python_django_project(self):
+        files = ["manage.py", "requirements.txt", "myproject/settings.py", "myproject/wsgi.py"]
+        result = LanguageDetector.detect(files)
+        self.assertEqual(result["language"], "python")
+        self.assertEqual(result["framework"], "django")
+        self.assertEqual(result["target_port"], 8000)
+        self.assertIn("gunicorn", result["start_command"])
+        self.assertIn("FROM python:3.12-slim", result["generated_dockerfile"])
+
+    def test_detect_python_fastapi_project(self):
+        files = ["main.py", "requirements.txt"]
+        contents = {"requirements.txt": "fastapi>=0.100.0\nuvicorn>=0.22.0"}
+        result = LanguageDetector.detect(files, contents)
+        self.assertEqual(result["language"], "python")
+        self.assertEqual(result["framework"], "fastapi")
+        self.assertIn("uvicorn", result["start_command"])
+
+    def test_detect_nodejs_nextjs_project(self):
+        files = ["package.json", "next.config.js", "pages/index.tsx"]
+        result = LanguageDetector.detect(files)
+        self.assertEqual(result["language"], "nodejs")
+        self.assertEqual(result["framework"], "nextjs")
+        self.assertEqual(result["target_port"], 3000)
+        self.assertIn("FROM node:20-alpine", result["generated_dockerfile"])
+
+    def test_detect_golang_project(self):
+        files = ["go.mod", "go.sum", "main.go"]
+        result = LanguageDetector.detect(files)
+        self.assertEqual(result["language"], "go")
+        self.assertEqual(result["target_port"], 8080)
+        self.assertIn("FROM golang:1.22-alpine", result["generated_dockerfile"])
+
+    def test_detect_dockerfile_passthrough(self):
+        files = ["Dockerfile", "app.py"]
+        result = LanguageDetector.detect(files)
+        self.assertEqual(result["language"], "dockerfile")
+        self.assertEqual(result["confidence"], 1.0)
+
+    def test_detect_api_endpoint(self):
+        payload = {
+            "files": ["package.json", "server.js"],
+            "file_contents": {"package.json": '{"dependencies": {"express": "^4.18.2"}}'},
+        }
+        res = self.client.post("/api/apps/detect/", data=json.dumps(payload), content_type="application/json")
+        self.assertEqual(res.status_code, 200)
+        data = json.loads(res.content)
+        self.assertEqual(data["language"], "nodejs")
+        self.assertEqual(data["framework"], "express")
+        self.assertEqual(data["target_port"], 3000)
+
 
 
