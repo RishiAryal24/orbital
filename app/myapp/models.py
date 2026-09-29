@@ -7,24 +7,81 @@ class ClientAccount(models.Model):
 
     TIER_CHOICES = [
         ("free", "Free Evaluation"),
-        ("starter", "Starter Tier"),
-        ("pro", "Professional Tier"),
+        ("starter", "Starter Tier ($9/mo)"),
+        ("growth", "Growth Tier ($29/mo)"),
+        ("pro", "Professional Tier (Legacy Growth)"),
+        ("team", "Team / Agency Tier ($79/mo)"),
         ("enterprise", "Enterprise Cloud"),
     ]
 
-    name          = models.CharField(max_length=150)
-    slug          = models.SlugField(max_length=150, unique=True)
-    contact_email = models.EmailField()
-    tier          = models.CharField(max_length=30, choices=TIER_CHOICES, default="starter")
-    is_active     = models.BooleanField(default=True)
-    created_at    = models.DateTimeField(default=timezone.now)
-    updated_at    = models.DateTimeField(auto_now=True)
+    name                   = models.CharField(max_length=150)
+    slug                   = models.SlugField(max_length=150, unique=True)
+    contact_email          = models.EmailField()
+    tier                   = models.CharField(max_length=30, choices=TIER_CHOICES, default="starter")
+    is_active              = models.BooleanField(default=True)
+    stripe_customer_id     = models.CharField(max_length=100, blank=True)
+    stripe_subscription_id = models.CharField(max_length=100, blank=True)
+    subscription_status    = models.CharField(max_length=30, default="active")
+    current_period_end     = models.DateTimeField(null=True, blank=True)
+    created_at             = models.DateTimeField(default=timezone.now)
+    updated_at             = models.DateTimeField(auto_now=True)
 
     class Meta:
         ordering = ["-created_at"]
 
     def __str__(self) -> str:
         return f"{self.name} ({self.tier})"
+
+    def can_add_server(self) -> tuple[bool, str]:
+        """Check if client tier allows connecting an additional VPS node."""
+        current_count = self.servers.count()
+        tier = self.tier.lower()
+        if tier == "starter" and current_count >= 1:
+            return False, "Starter tier allows a maximum of 1 connected server. Please upgrade to Growth ($29/mo)."
+        if tier in ["growth", "pro"] and current_count >= 3:
+            return False, "Growth tier allows a maximum of 3 connected servers. Please upgrade to Team/Agency ($79/mo)."
+        if tier == "free" and current_count >= 1:
+            return False, "Free tier allows a maximum of 1 evaluation node."
+        return True, ""
+
+    def can_add_application(self) -> tuple[bool, str]:
+        """Check if client tier allows deploying an additional application."""
+        current_count = self.applications.count()
+        tier = self.tier.lower()
+        if tier == "starter" and current_count >= 5:
+            return False, "Starter tier allows a maximum of 5 applications. Please upgrade to Growth ($29/mo) for unlimited apps."
+        if tier == "free" and current_count >= 1:
+            return False, "Free tier allows a maximum of 1 application."
+        return True, ""
+
+    def can_add_database(self) -> tuple[bool, str]:
+        """Check if client tier allows provisioning an additional database add-on."""
+        current_count = self.addons.count()
+        tier = self.tier.lower()
+        if tier == "starter" and current_count >= 2:
+            return False, "Starter tier allows a maximum of 2 databases. Please upgrade to Growth ($29/mo) for unlimited databases."
+        if tier == "free" and current_count >= 1:
+            return False, "Free tier allows a maximum of 1 database."
+        return True, ""
+
+
+class BillingInvoice(models.Model):
+    """Tracks customer payment invoices from Stripe."""
+
+    client             = models.ForeignKey(ClientAccount, related_name="invoices", on_delete=models.CASCADE)
+    stripe_invoice_id  = models.CharField(max_length=100, unique=True)
+    amount_paid        = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
+    currency           = models.CharField(max_length=10, default="usd")
+    status             = models.CharField(max_length=30, default="paid")
+    hosted_invoice_url = models.URLField(blank=True, max_length=500)
+    paid_at            = models.DateTimeField(default=timezone.now)
+    created_at         = models.DateTimeField(default=timezone.now)
+
+    class Meta:
+        ordering = ["-paid_at"]
+
+    def __str__(self) -> str:
+        return f"Invoice {self.stripe_invoice_id} - ${self.amount_paid} ({self.client.name})"
 
 
 class ProjectService(models.Model):

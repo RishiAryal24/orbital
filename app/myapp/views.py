@@ -15,6 +15,7 @@ from .models import (
     ApplicationDeployment,
     ManagedAddon,
     DeploymentEvent,
+    BillingInvoice,
 )
 from .services import (
     ManifestSynthesizer,
@@ -23,6 +24,7 @@ from .services import (
     VPSProvisioner,
     GitHubWebhookService,
     LanguageDetector,
+    BillingService,
 )
 
 
@@ -663,11 +665,10 @@ class ServerNodeListView(View):
             return JsonResponse({"error": "Client not found"}, status=404)
 
         # Check quota for client (e.g. Starter tier allows 1 server)
-        if client.tier == "starter" and client.servers.count() >= 1:
-            return JsonResponse(
-                {"error": "Starter tier allows a maximum of 1 connected server. Please upgrade to Growth."},
-                status=403,
-            )
+        allowed, err_msg = client.can_add_server()
+        if not allowed:
+            return JsonResponse({"error": err_msg}, status=403)
+
 
         cf_service = CloudflareService()
         tunnel_res = cf_service.create_tunnel(f"pyloom-{data['name'].lower().replace(' ', '-')}")
@@ -810,6 +811,11 @@ class ApplicationDeploymentListView(View):
             client = ClientAccount.objects.get(pk=data["client_id"])
         except ClientAccount.DoesNotExist:
             return JsonResponse({"error": "Client not found"}, status=404)
+
+        # Check quota for client
+        allowed, err_msg = client.can_add_application()
+        if not allowed:
+            return JsonResponse({"error": err_msg}, status=403)
 
         server = None
         if data.get("server_id"):
@@ -963,6 +969,11 @@ class ManagedAddonListView(View):
         except ClientAccount.DoesNotExist:
             return JsonResponse({"error": "Client not found"}, status=404)
 
+        # Check quota for client
+        allowed, err_msg = client.can_add_database()
+        if not allowed:
+            return JsonResponse({"error": err_msg}, status=403)
+
         try:
             server = ServerNode.objects.get(pk=data["server_id"])
         except ServerNode.DoesNotExist:
@@ -1110,6 +1121,120 @@ class LanguageDetectionView(View):
         file_contents = data.get("file_contents", {})
         result = LanguageDetector.detect(files, file_contents)
         return JsonResponse(result, status=200)
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Stripe Billing & Subscription Quotas Views
+# ─────────────────────────────────────────────────────────────────────────────
+
+
+@method_decorator(csrf_exempt, name="dispatch")
+class BillingCheckoutView(View):
+    """
+    POST /api/billing/checkout/
+    Generates a Stripe Checkout session URL for Starter ($9), Growth ($29), or Team ($79).
+    """
+
+    def post(self, request):
+        try:
+            data = json.loads(request.body)
+        except (ValueError, TypeError):
+            return JsonResponse({"error": "Invalid JSON body"}, status=400)
+
+        client_id = data.get("client_id")
+        tier = data.get("tier", "growth")
+        success_url = data.get("success_url", request.build_absolute_uri("/dashboard/?payment=success"))
+        cancel_url = data.get("cancel_url", request.build_absolute_uri("/dashboard/?payment=cancelled"))
+
+        if not client_id:
+            return JsonResponse({"error": "client_id is required"}, status=400)
+
+        try:
+            client = ClientAccount.objects.get(pk=client_id)
+        except ClientAccount.DoesNotExist:
+            return JsonResponse({"error": "Client not found"}, status=404)
+
+        service = BillingService()
+        result = service.create_checkout_session(client, tier, success_url, cancel_url)
+        return JsonResponse(result, status=200 if result.get("success") else 400)
+
+
+@method_decorator(csrf_exempt, name="dispatch")
+class BillingCustomerPortalView(View):
+    """
+    POST /api/billing/portal/
+    Generates a Stripe Customer Portal link so users can cancel, upgrade, or manage payment cards.
+    """
+
+    def post(self, request):
+        try:
+            data = json.loads(request.body)
+        except (ValueError, TypeError):
+            return JsonResponse({"error": "Invalid JSON body"}, status=400)
+
+        client_id = data.get("client_id")
+        return_url = data.get("return_url", request.build_absolute_uri("/dashboard/"))
+
+        if not client_id:
+            return JsonResponse({"error": "client_id is required"}, status=400)
+
+        try:
+            client = ClientAccount.objects.get(pk=client_id)
+        except ClientAccount.DoesNotExist:
+            return JsonResponse({"error": "Client not found"}, status=404)
+
+        service = BillingService()
+        result = service.create_customer_portal_session(client, return_url)
+        return JsonResponse(result, status=200 if result.get("success") else 400)
+
+
+@method_decorator(csrf_exempt, name="dispatch")
+class BillingWebhookView(View):
+    """
+    POST /api/billing/webhook/
+    Handles incoming Stripe payment webhooks (checkout.session.completed, subscription.deleted, invoice.payment_succeeded).
+    """
+
+    def post(self, request):
+        try:
+            payload = json.loads(request.body)
+        except (ValueError, TypeError):
+            return JsonResponse({"error": "Invalid JSON payload"}, status=400)
+
+        success, message = BillingService.handle_webhook_event(payload)
+        return JsonResponse({"success": success, "message": message}, status=200 if success else 400)
+
+
+@method_decorator(csrf_exempt, name="dispatch")
+class BillingInvoiceListView(View):
+    """
+    GET /api/billing/invoices/?client_id=<id>
+    Lists paid invoices for a customer account.
+    """
+
+    def get(self, request):
+        client_id = request.GET.get("client_id")
+        queryset = BillingInvoice.objects.select_related("client").all()
+        if client_id:
+            queryset = queryset.filter(client_id=client_id)
+
+        invoices = []
+        for inv in queryset[:50]:
+            invoices.append(
+                {
+                    "id": inv.id,
+                    "client_id": inv.client_id,
+                    "client_name": inv.client.name,
+                    "stripe_invoice_id": inv.stripe_invoice_id,
+                    "amount_paid": float(inv.amount_paid),
+                    "currency": inv.currency,
+                    "status": inv.status,
+                    "hosted_invoice_url": inv.hosted_invoice_url,
+                    "paid_at": inv.paid_at.isoformat(),
+                }
+            )
+        return JsonResponse({"invoices": invoices, "total": len(invoices)})
+
 
 
 

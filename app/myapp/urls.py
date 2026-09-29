@@ -21,6 +21,10 @@ from .views import (
     GitHubWebhookView,
     ApplicationEventsListView,
     LanguageDetectionView,
+    BillingCheckoutView,
+    BillingCustomerPortalView,
+    BillingWebhookView,
+    BillingInvoiceListView,
 )
 
 urlpatterns = [
@@ -46,6 +50,11 @@ urlpatterns = [
     path("api/addons/", ManagedAddonListView.as_view(), name="addon-list"),
     # Push-to-Deploy GitHub Webhook
     path("api/webhooks/github/<str:slug>/", GitHubWebhookView.as_view(), name="github-webhook"),
+    # Stripe Billing & Subscriptions
+    path("api/billing/checkout/", BillingCheckoutView.as_view(), name="billing-checkout"),
+    path("api/billing/portal/", BillingCustomerPortalView.as_view(), name="billing-portal"),
+    path("api/billing/webhook/", BillingWebhookView.as_view(), name="billing-webhook"),
+    path("api/billing/invoices/", BillingInvoiceListView.as_view(), name="billing-invoices"),
     # Backward compatibility endpoints
     path("api/articles/", ArticleListView.as_view(), name="article-list"),
     path("api/articles/<int:pk>/", ArticleDetailView.as_view(), name="article-detail"),

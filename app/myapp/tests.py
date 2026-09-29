@@ -19,8 +19,9 @@ from .models import (
     ApplicationDeployment,
     ManagedAddon,
     DeploymentEvent,
+    BillingInvoice,
 )
-from .services import LanguageDetector
+from .services import LanguageDetector, BillingService
 
 
 
@@ -574,6 +575,116 @@ class LanguageAutoDetectionTests(TestCase):
         self.assertEqual(data["language"], "nodejs")
         self.assertEqual(data["framework"], "express")
         self.assertEqual(data["target_port"], 3000)
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# 9. Stripe Billing & Subscription Quota Tests
+# ─────────────────────────────────────────────────────────────────────────────
+class BillingAndSubscriptionTests(TestCase):
+    def setUp(self):
+        self.client = Client()
+        self.account = ClientAccount.objects.create(
+            name="Indie Devs", slug="indiedevs", contact_email="indie@devs.com", tier="starter"
+        )
+
+    def test_create_checkout_session_returns_url(self):
+        payload = {"client_id": self.account.id, "tier": "growth"}
+        res = self.client.post("/api/billing/checkout/", data=json.dumps(payload), content_type="application/json")
+        self.assertEqual(res.status_code, 200)
+        data = json.loads(res.content)
+        self.assertTrue(data["success"])
+        self.assertIn("checkout.stripe.com", data["checkout_url"])
+        self.assertEqual(data["tier"], "growth")
+        self.assertEqual(data["amount"], 29.0)
+
+    def test_create_customer_portal_session_returns_url(self):
+        payload = {"client_id": self.account.id}
+        res = self.client.post("/api/billing/portal/", data=json.dumps(payload), content_type="application/json")
+        self.assertEqual(res.status_code, 200)
+        data = json.loads(res.content)
+        self.assertTrue(data["success"])
+        self.assertIn("billing.stripe.com", data["portal_url"])
+
+    def test_stripe_webhook_checkout_completed_upgrades_tier(self):
+        webhook_payload = {
+            "type": "checkout.session.completed",
+            "data": {
+                "object": {
+                    "customer": "cus_test_12345",
+                    "subscription": "sub_test_67890",
+                    "metadata": {"client_id": self.account.id, "tier": "team"},
+                }
+            },
+        }
+        res = self.client.post("/api/billing/webhook/", data=json.dumps(webhook_payload), content_type="application/json")
+        self.assertEqual(res.status_code, 200)
+        self.account.refresh_from_db()
+        self.assertEqual(self.account.tier, "team")
+        self.assertEqual(self.account.stripe_customer_id, "cus_test_12345")
+        self.assertEqual(self.account.stripe_subscription_id, "sub_test_67890")
+        self.assertEqual(self.account.subscription_status, "active")
+
+    def test_stripe_webhook_subscription_deleted_downgrades_to_free(self):
+        self.account.stripe_subscription_id = "sub_to_cancel_999"
+        self.account.tier = "growth"
+        self.account.save()
+
+        webhook_payload = {
+            "type": "customer.subscription.deleted",
+            "data": {"object": {"id": "sub_to_cancel_999"}},
+        }
+        res = self.client.post("/api/billing/webhook/", data=json.dumps(webhook_payload), content_type="application/json")
+        self.assertEqual(res.status_code, 200)
+        self.account.refresh_from_db()
+        self.assertEqual(self.account.tier, "free")
+        self.assertEqual(self.account.subscription_status, "canceled")
+
+    def test_stripe_webhook_invoice_paid_records_invoice(self):
+        self.account.stripe_customer_id = "cus_paying_customer_456"
+        self.account.save()
+
+        webhook_payload = {
+            "type": "invoice.payment_succeeded",
+            "data": {
+                "object": {
+                    "id": "in_test_invoice_001",
+                    "customer": "cus_paying_customer_456",
+                    "amount_paid": 2900,
+                    "currency": "usd",
+                    "hosted_invoice_url": "https://invoice.stripe.com/i/test",
+                }
+            },
+        }
+        res = self.client.post("/api/billing/webhook/", data=json.dumps(webhook_payload), content_type="application/json")
+        self.assertEqual(res.status_code, 200)
+        invoice = BillingInvoice.objects.get(stripe_invoice_id="in_test_invoice_001")
+        self.assertEqual(invoice.client, self.account)
+        self.assertEqual(float(invoice.amount_paid), 29.0)
+
+        # Test listing invoices endpoint
+        inv_res = self.client.get(f"/api/billing/invoices/?client_id={self.account.id}")
+        self.assertEqual(inv_res.status_code, 200)
+        self.assertEqual(len(json.loads(inv_res.content)["invoices"]), 1)
+
+    def test_tier_quota_enforcement_for_applications_and_databases(self):
+        # Starter tier allows max 5 applications
+        for i in range(5):
+            ApplicationDeployment.objects.create(
+                client=self.account,
+                name=f"App {i}",
+                slug=f"app-{i}",
+                git_repo_url="https://github.com/test/app.git",
+            )
+        allowed, msg = self.account.can_add_application()
+        self.assertFalse(allowed)
+        self.assertIn("Starter tier allows a maximum of 5 applications", msg)
+
+        # Upgrading to growth unlocks unlimited applications
+        self.account.tier = "growth"
+        self.account.save()
+        allowed_growth, _ = self.account.can_add_application()
+        self.assertTrue(allowed_growth)
+
 
 
 
